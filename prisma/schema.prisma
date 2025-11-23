@@ -23,12 +23,15 @@ model User {
   updatedAt     DateTime  @default(now()) @updatedAt
   sessions      Session[]
   accounts      Account[]
-  sshKeys      SshKey[]
+  sshKeys       SshKey[]
+  projectsOwned Project[]
+  contributions ProjectContributor[]
 
 
   @@unique([email])
   @@map("user")
 }
+
 
 model Session {
   id        String   @id
@@ -86,4 +89,36 @@ model SshKey {
   user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("ssh_key")
+}
+
+
+
+model ProjectContributor {
+  id        String   @id @default(cuid())
+  role      String   @default("contributor") // owner, maintainer, contributor
+  addedAt   DateTime @default(now())
+
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId]) // user nie może być contributor 2x
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String?
+  createdAt   DateTime @default(now())
+  visibility  String   @default("public") 
+  description String?
+  
+  
+  userId      String
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contributors ProjectContributor[]
+
+
+  @@map("project")
 }
