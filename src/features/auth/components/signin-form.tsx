@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import Image from 'next/image';
 import {
   SignInSchema,
   type SignInDto,
@@ -16,6 +17,8 @@ import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Separator } from '@/shared/components/ui/separator';
 import { Eye, EyeOff, Github, Lock, Mail, ArrowRight } from 'lucide-react';
 import { signIn } from '@/shared/lib/auth-client';
+
+import { AuthBackground } from '@/shared/components/ui/auth-background';
 
 export default function LoginCardSection() {
   const [showPassword, setShowPassword] = useState(false);
@@ -30,65 +33,6 @@ export default function LoginCardSection() {
     resolver: zodResolver(SignInSchema),
   });
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return;
-
-    const setSize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    setSize();
-
-    type P = { x: number; y: number; v: number; o: number };
-    let ps: P[] = [];
-    let raf = 0;
-
-    const make = () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      v: Math.random() * 0.25 + 0.05,
-      o: Math.random() * 0.35 + 0.15,
-    });
-
-    const init = () => {
-      ps = [];
-      const count = Math.floor((canvas.width * canvas.height) / 9000);
-      for (let i = 0; i < count; i++) ps.push(make());
-    };
-
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ps.forEach((p) => {
-        p.y -= p.v;
-        if (p.y < 0) {
-          p.x = Math.random() * canvas.width;
-          p.y = canvas.height + Math.random() * 40;
-          p.v = Math.random() * 0.25 + 0.05;
-          p.o = Math.random() * 0.35 + 0.15;
-        }
-        ctx.fillStyle = `rgba(250,250,250,${p.o})`;
-        ctx.fillRect(p.x, p.y, 0.7, 2.2);
-      });
-      raf = requestAnimationFrame(draw);
-    };
-
-    const onResize = () => {
-      setSize();
-      init();
-    };
-
-    window.addEventListener('resize', onResize);
-    init();
-    raf = requestAnimationFrame(draw);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      cancelAnimationFrame(raf);
-    };
-  }, []);
-
   const onSubmit = async (data: SignInDto) => {
     setIsLoading(true);
     setError(null);
@@ -98,12 +42,12 @@ export default function LoginCardSection() {
       {
         onRequest: () => console.log('Signing in...'),
         onSuccess: () => console.log('Signed in'),
-        onError: (ctx) => setError(ctx.error.message),
+        onError: (ctx) => setError(ctx.error.message ?? 'An error occurred'),
       },
     );
 
     if (signInError) {
-      setError(signInError.message);
+      setError(signInError.message ?? 'An error occurred');
     }
 
     setIsLoading(false);
@@ -119,7 +63,7 @@ export default function LoginCardSection() {
       if (socialError) {
         setError(socialError.message);
       }
-    } catch (err) {
+    } catch {
       setError('Unable to sign in with GitHub.');
     } finally {
       setIsLoading(false);
@@ -127,13 +71,19 @@ export default function LoginCardSection() {
   };
 
   return (
-    <section className="fixed inset-0">
+    <AuthBackground>
       {/* Centered Login Card */}
-      <div className="h-full w-full flex flex-col items-center justify-center px-4">
+      <div className="h-full w-full flex flex-col items-center justify-center px-4 flex-grow">
         <div className="mb-8 flex flex-col items-center justify-center space-y-4">
           <div className="p-3 bg-white/5 border border-white/10 rounded-xl">
             {/* Logo w SVG - białe */}
-            <img src="/icon/logo.svg" alt="PVC Logo" className="w-10 h-10" />
+            <Image
+              src="/icon/logo.svg"
+              alt="PVC Logo"
+              width={40}
+              height={40}
+              className="w-10 h-10"
+            />
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold tracking-tight text-white">
@@ -216,7 +166,7 @@ export default function LoginCardSection() {
                   <Checkbox
                     id="remember"
                     className="border-zinc-700 data-[state=checked]:bg-zinc-50 data-[state=checked]:text-zinc-900 transition-all"
-                    onCheckedChange={(checked) => {
+                    onCheckedChange={() => {
                       // Manually handle checkbox if needed or register it
                       // For now, just keeping UI consistent, or register 'rememberMe'
                     }}
@@ -285,6 +235,6 @@ export default function LoginCardSection() {
           </CardFooter>
         </Card>
       </div>
-    </section>
+    </AuthBackground>
   );
 }

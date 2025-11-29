@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -32,14 +33,14 @@ import {
   XCircle,
 } from 'lucide-react';
 import { signIn, signUp } from '@/shared/lib/auth-client';
-import { useSession } from '@/shared/lib/auth-client';
 import { setupUserFolder } from '../services/setup-new-user';
+import { AuthBackground } from '@/shared/components/ui/auth-background';
+
 export default function SignupCardSection() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const { data: session } = useSession();
 
   const {
     register,
@@ -48,66 +49,6 @@ export default function SignupCardSection() {
   } = useForm<SignUpDto>({
     resolver: zodResolver(SignUpSchema),
   });
-
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return;
-
-    const setSize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    setSize();
-
-    type P = { x: number; y: number; v: number; o: number };
-    let ps: P[] = [];
-    let raf = 0;
-
-    const make = () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      v: Math.random() * 0.25 + 0.05,
-      o: Math.random() * 0.35 + 0.15,
-    });
-
-    const init = () => {
-      ps = [];
-      const count = Math.floor((canvas.width * canvas.height) / 9000);
-      for (let i = 0; i < count; i++) ps.push(make());
-    };
-
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ps.forEach((p) => {
-        p.y -= p.v;
-        if (p.y < 0) {
-          p.x = Math.random() * canvas.width;
-          p.y = canvas.height + Math.random() * 40;
-          p.v = Math.random() * 0.25 + 0.05;
-          p.o = Math.random() * 0.35 + 0.15;
-        }
-        ctx.fillStyle = `rgba(250,250,250,${p.o})`;
-        ctx.fillRect(p.x, p.y, 0.7, 2.2);
-      });
-      raf = requestAnimationFrame(draw);
-    };
-
-    const onResize = () => {
-      setSize();
-      init();
-    };
-
-    window.addEventListener('resize', onResize);
-    init();
-    raf = requestAnimationFrame(draw);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      cancelAnimationFrame(raf);
-    };
-  }, []);
 
   const onSubmit = async (data: SignUpDto) => {
     setIsLoading(true);
@@ -185,8 +126,8 @@ export default function SignupCardSection() {
   };
   if (success) {
     return (
-      <section className="fixed inset-0">
-        <div className="h-full w-full grid place-items-center px-4">
+      <AuthBackground>
+        <div className="h-full w-full flex flex-col items-center justify-center px-4 flex-grow">
           <Card className="card-animate w-full max-w-md border-zinc-800 bg-zinc-900/70 backdrop-blur supports-[backdrop-filter]:bg-zinc-900/60">
             <CardHeader className="space-y-1">
               <div className="rounded-full bg-green-500/10 p-3 w-fit mx-auto mb-2">
@@ -210,18 +151,24 @@ export default function SignupCardSection() {
             </CardFooter>
           </Card>
         </div>
-      </section>
+      </AuthBackground>
     );
   }
 
   return (
-    <section className="fixed inset-0">
+    <AuthBackground>
       {/* Centered Signup Card */}
-      <div className="h-full w-full flex flex-col items-center justify-center px-4">
+      <div className="h-full w-full flex flex-col items-center justify-center px-4 flex-grow">
         <div className="mb-8 flex flex-col items-center justify-center space-y-4">
           <div className="p-3 bg-white/5 border border-white/10 rounded-xl">
             {/* Logo w SVG - białe */}
-            <img src="/icon/logo.svg" alt="PVC Logo" className="w-10 h-10" />
+            <Image
+              src="/icon/logo.svg"
+              alt="PVC Logo"
+              width={40}
+              height={40}
+              className="w-10 h-10"
+            />
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold tracking-tight text-white">
@@ -370,6 +317,6 @@ export default function SignupCardSection() {
           </CardFooter>
         </Card>
       </div>
-    </section>
+    </AuthBackground>
   );
 }
