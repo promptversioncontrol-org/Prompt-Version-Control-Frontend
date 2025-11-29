@@ -3,7 +3,7 @@ import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 export async function createWorkspaceFolder(
   userId: string,
-  workspaceId: string,
+  workspaceSlug: string,
 ) {
   const bucketName = process.env.AWS_BUCKET_NAME!;
 
@@ -11,7 +11,7 @@ export async function createWorkspaceFolder(
     throw new Error('AWS_BUCKET_NAME is not configured');
   }
 
-  const folderKey = `pvc/users/${userId}/workspaces/${workspaceId}/`;
+  const folderKey = `pvc/users/${userId}/workspaces/${workspaceSlug}/`;
 
   try {
     const command = new PutObjectCommand({
