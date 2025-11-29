@@ -42,7 +42,7 @@ export default function SignInPage() {
           <h1 className="text-2xl font-semibold mb-4">Sign in</h1>
           <SignInForm />
           <p className="mt-4 text-sm">
-            Dont have an account?
+            Don&apos;t have an account?
             <Link href="/sign-up" className="text-blue-600 underline">
               Sign up
             </Link>

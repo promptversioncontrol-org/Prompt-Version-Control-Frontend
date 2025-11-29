@@ -108,9 +108,9 @@ export default function SignupCardSection() {
     const { error: signUpError } = await signUp.email(
       { name, email, password },
       {
-        onRequest: () => console.log('⏳ Creating account...'),
+        onRequest: () => console.log('Creating account...'),
         onSuccess: async (ctx) => {
-          console.log('✅ Zarejestrowano');
+          console.log('Registered');
           if (ctx.data?.user?.id) {
             try {
               await setupUserFolder(ctx.data.user.id);
@@ -144,10 +144,10 @@ export default function SignupCardSection() {
       },
       {
         onRequest: () => {
-          console.log('🔄 Redirecting to GitHub...');
+          console.log('Redirecting to GitHub...');
         },
         onSuccess: async (ctx) => {
-          console.log('✅ Successfully signed in!', ctx);
+          console.log('Successfully signed in!', ctx);
 
           if (ctx.data?.user?.id) {
             try {
@@ -155,19 +155,19 @@ export default function SignupCardSection() {
               const result = await setupUserFolder(ctx.data.user.id);
 
               if (result.success) {
-                console.log('✅ S3 folder created:', result.data);
+                console.log('S3 folder created:', result.data);
               } else {
-                console.error('❌ Failed to create S3 folder:', result.error);
+                console.error('Failed to create S3 folder:', result.error);
                 setError('Account created but workspace setup failed');
               }
             } catch (error) {
-              console.error('❌ Failed to setup folder:', error);
+              console.error('Failed to setup folder:', error);
               setError('Account created but workspace setup failed');
             }
           }
         },
         onError: (ctx) => {
-          console.error('❌ Sign in failed:', ctx.error);
+          console.error('Sign in failed:', ctx.error);
           setError(ctx.error.message || 'Unable to sign up with GitHub');
         },
       },
@@ -237,15 +237,15 @@ export default function SignupCardSection() {
                   Full Name
                 </Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 transition-colors" />
                   <Input
                     id="name"
                     name="name"
                     type="text"
                     placeholder="John Doe"
                     required
-                    className="pl-10 bg-zinc-950 border-zinc-800 text-zinc-50 placeholder:text-zinc-600 input-focus"
+                    className="peer pl-10 bg-zinc-950 border-zinc-800 text-zinc-50 placeholder:text-zinc-600 input-focus"
                   />
+                  <User className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 transition-colors peer-focus:text-zinc-300" />
                 </div>
               </div>
 
@@ -254,15 +254,15 @@ export default function SignupCardSection() {
                   Email
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 transition-colors" />
                   <Input
                     id="email"
                     name="email"
                     type="email"
                     placeholder="you@example.com"
                     required
-                    className="pl-10 bg-zinc-950 border-zinc-800 text-zinc-50 placeholder:text-zinc-600 input-focus"
+                    className="peer pl-10 bg-zinc-950 border-zinc-800 text-zinc-50 placeholder:text-zinc-600 input-focus"
                   />
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 transition-colors peer-focus:text-zinc-300" />
                 </div>
               </div>
 
@@ -274,15 +274,15 @@ export default function SignupCardSection() {
                   Password
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 transition-colors" />
                   <Input
                     id="password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="********"
                     required
-                    className="pl-10 pr-10 bg-zinc-950 border-zinc-800 text-zinc-50 placeholder:text-zinc-600 input-focus"
+                    className="peer pl-10 pr-10 bg-zinc-950 border-zinc-800 text-zinc-50 placeholder:text-zinc-600 input-focus"
                   />
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 transition-colors peer-focus:text-zinc-300" />
                   <button
                     type="button"
                     aria-label={
