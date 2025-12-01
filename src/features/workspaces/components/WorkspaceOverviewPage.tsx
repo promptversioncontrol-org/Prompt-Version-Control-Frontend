@@ -81,7 +81,7 @@ export default async function WorkspaceOverviewPage({
                 {dates.map((date) => (
                   <Link
                     key={date}
-                    href={`/${username}/${workspace.slug}/${date}`}
+                    href={`/dashboard/workspaces/${workspace.slug}/${date}`}
                     className="block"
                   >
                     <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3 text-zinc-200 hover:border-zinc-700 hover:bg-zinc-800/50 transition-all">

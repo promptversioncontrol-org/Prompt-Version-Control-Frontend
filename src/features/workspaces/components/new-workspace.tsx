@@ -76,7 +76,7 @@ export default function NewWorkspacePage() {
       }
 
       const workspace = await response.json();
-      router.push(`/${workspace.username}/${workspace.slug}`);
+      router.push(`/dashboard/workspaces/${workspace.slug}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

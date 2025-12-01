@@ -7,6 +7,8 @@ import { createWorkspaceFolder } from '@/features/workspaces/services/setup-fold
 import { s3Client } from '@/shared/lib/s3-client';
 import { GetObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 
+// nie pamietam do czego to było ale skoro tu jest to mozliwe że jakas funckja jej używa nie dotykać
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
 
@@ -41,7 +43,6 @@ export async function GET(request: NextRequest) {
   const basePrefix = `pvc/users/${session.user.id}/workspaces/${workspaceName}/`;
 
   try {
-    // When date is provided, return that single report
     if (date) {
       const key = `${basePrefix}${date}/report.json`;
       const response = await s3Client.send(
@@ -62,7 +63,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // When date is omitted, fetch all date folders under the workspace
     const listResponse = await s3Client.send(
       new ListObjectsV2Command({
         Bucket: bucket,
@@ -152,7 +152,6 @@ export async function POST(request: NextRequest) {
 
     const workspace = await createNewWorkspace(workspaceData);
 
-    // Create S3 folder for the workspace
     try {
       await createWorkspaceFolder(session.user.id, workspace.slug);
       console.log('✅ S3 folder created for workspace:', workspace.slug);

@@ -56,7 +56,7 @@ export default async function WorkspaceReportPage({
                 {workspace.visibility}
               </Badge>
               <Link
-                href={`/${username}/${workspace.slug}`}
+                href={`/dashboard/workspaces/${workspace.slug}`}
                 className="text-zinc-400 hover:text-zinc-200 underline-offset-4 hover:underline"
               >
                 Back to workspace
