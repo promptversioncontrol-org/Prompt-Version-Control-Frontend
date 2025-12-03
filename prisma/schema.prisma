@@ -30,6 +30,8 @@ model User {
   twoFactorEnabled Boolean? @default(false)
   twoFactor        TwoFactor?
 
+  telegramTokens TelegramToken[]
+  userTelegrams UserTelegram[]
 
   @@unique([email])
   @@map("user")
@@ -151,3 +153,21 @@ model SecurityRule {
 
   @@map("security_rule")
 } 
+
+
+model TelegramToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model UserTelegram {
+  id       String   @id @default(cuid())
+  chatId   String   @unique
+  userId   String   @unique
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
