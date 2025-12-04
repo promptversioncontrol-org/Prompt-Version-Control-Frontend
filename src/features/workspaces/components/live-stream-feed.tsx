@@ -15,6 +15,7 @@ import {
   Clock,
   Code2,
 } from 'lucide-react';
+import { sendTelegramNotification } from '../contracts/send-telegram-notification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/shared/lib/utils';
 
@@ -140,8 +141,8 @@ const LogItem = ({ report }: { report: LeakReport }) => {
                 </span>
               </span>
             </div>
-            <span className="flex items-center gap-1.5 text-zinc-500 font-mono">
-              <Clock size={10} />
+            <span className="flex items-center gap-1.5 text-zinc-400 font-mono">
+              <Clock size={12} />
               {new Date(report.timestamp).toLocaleTimeString()}
             </span>
           </div>
@@ -209,6 +210,14 @@ export function LiveStreamFeed({
     socket.on('dashboard:leak_alert', (rawReport: Omit<LeakReport, 'id'>) => {
       console.log('Frontend received leak alert:', rawReport);
       const report = { ...rawReport, id: crypto.randomUUID() };
+
+      sendTelegramNotification({
+        userId: workspaceId,
+        workspaceSlug: workspaceSlug,
+        event: report,
+      }).catch((err) =>
+        console.error('Failed to send telegram notification from client:', err),
+      );
 
       if (isPaused) {
         pendingReports.current.push(report);

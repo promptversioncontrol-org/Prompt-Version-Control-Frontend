@@ -163,7 +163,7 @@ export function TelegramSettings({
 
           {connectedAccount && (
             <Alert className="bg-sky-500/10 border-sky-500/20 text-sky-200">
-              <AlertCircle className="h-4 w-4 text-sky-500" />
+              <AlertCircle className="h-5 w-5 text-sky-400" />
               <AlertTitle>You are all set!</AlertTitle>
               <AlertDescription className="text-sky-200/70">
                 You will now receive notifications for important workspace
