@@ -7,6 +7,9 @@ import { createUserFolder } from '../../features/auth/services/user-file-structu
 const prisma = new PrismaClient();
 
 export const auth = betterAuth({
+  emailAndPassword: {
+    enabled: true,
+  },
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
   }),
