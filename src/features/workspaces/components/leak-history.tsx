@@ -40,8 +40,6 @@ export function LeakHistory({ workspaceSlug }: LeakHistoryProps) {
     Awaited<ReturnType<typeof getWorkspaceLeaks>>['leaks']
   >([]);
   const [loading, setLoading] = useState(true);
-
-  // Filters
   const [severity, setSeverity] = useState('all');
   const [selectedUser, setSelectedUser] = useState('all');
   const [search, setSearch] = useState('');
@@ -51,33 +49,32 @@ export function LeakHistory({ workspaceSlug }: LeakHistoryProps) {
     getLeakUsers(workspaceSlug).then(setUsers).catch(console.error);
   }, [workspaceSlug]);
 
-  useEffect(() => {
-    const fetchLeaks = async () => {
-      setLoading(true);
-      try {
-        const result = await getWorkspaceLeaks({
-          workspaceSlug,
-          severity: severity === 'all' ? undefined : severity,
-          username: selectedUser === 'all' ? undefined : selectedUser,
-          search: search.length > 2 ? search : undefined,
-        });
-        setLeaks(result.leaks || []);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchLeaks = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await getWorkspaceLeaks({
+        workspaceSlug,
+        severity: severity === 'all' ? undefined : severity,
+        username: selectedUser === 'all' ? undefined : selectedUser,
+        search: search.length > 2 ? search : undefined,
+      });
+      setLeaks(result.leaks || []);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }, [workspaceSlug, severity, selectedUser, search]);
 
+  useEffect(() => {
     const timer = setTimeout(() => {
       fetchLeaks();
     }, 300);
     return () => clearTimeout(timer);
-  }, [workspaceSlug, severity, selectedUser, search]);
+  }, [fetchLeaks]);
 
   return (
     <div className="space-y-4">
-      {/* Filters Toolbar */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-zinc-900/50 p-3 rounded-lg border border-zinc-800">
         <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="relative w-full md:w-64">
@@ -128,10 +125,8 @@ export function LeakHistory({ workspaceSlug }: LeakHistoryProps) {
         </Button>
       </div>
 
-      {/* Results Table Container with Scroll */}
       <div className="rounded-md border border-zinc-800 bg-zinc-900/40 relative h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
         <Table>
-          {/* Sticky Header */}
           <TableHeader className="sticky top-0 z-20 bg-zinc-900 shadow-sm border-b border-zinc-800">
             <TableRow className="border-zinc-800 hover:bg-transparent">
               <TableHead className="w-[180px] text-zinc-400 font-medium">

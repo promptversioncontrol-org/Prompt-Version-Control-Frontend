@@ -12,6 +12,7 @@ import {
 } from '@/shared/components/ui/tabs';
 import Link from 'next/link';
 import { ChevronRight, LayoutGrid, Settings } from 'lucide-react';
+import { InviteWorkspaceMemberForm } from '@/features/workspaces/components/invite-workspace-member-form';
 
 interface WorkspaceSettingsPageProps {
   params: Promise<{ workspaceSlug: string }>;
@@ -26,6 +27,11 @@ export default async function WorkspaceSettingsPage({
     where: { slug: workspaceSlug },
     include: {
       securityRules: true,
+      contributors: {
+        include: {
+          user: true,
+        },
+      },
     },
   });
 
@@ -69,11 +75,52 @@ export default async function WorkspaceSettingsPage({
         </div>
       </div>
 
-      <Tabs defaultValue="security" className="w-full">
+      <Tabs defaultValue="members" className="w-full">
         <TabsList className="bg-zinc-900/50 border border-zinc-800">
+          <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="security">Security Policy</TabsTrigger>
           <TabsTrigger value="telegram">Telegram Notifications</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="members" className="mt-6 space-y-6">
+          <InviteWorkspaceMemberForm workspaceId={workspace.id} />
+
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden">
+            <div className="p-4 border-b border-zinc-800 bg-zinc-900/30">
+              <h3 className="font-medium text-zinc-200">Current Members</h3>
+            </div>
+            <div className="divide-y divide-zinc-800">
+              {workspace.contributors.map((contributor) => (
+                <div
+                  key={contributor.id}
+                  className="p-4 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-medium text-zinc-400">
+                      {contributor.user.username?.[0]?.toUpperCase() || '?'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-zinc-200">
+                        {contributor.user.username || contributor.user.email}
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        {contributor.user.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-xs text-zinc-400 capitalize bg-zinc-900 px-2 py-1 rounded border border-zinc-800">
+                    {contributor.role}
+                  </div>
+                </div>
+              ))}
+              {workspace.contributors.length === 0 && (
+                <div className="p-8 text-center text-zinc-500 text-sm">
+                  No members found.
+                </div>
+              )}
+            </div>
+          </div>
+        </TabsContent>
 
         <TabsContent value="security" className="mt-6">
           <div className="p-6 rounded-xl bg-zinc-900/50 border border-zinc-800">

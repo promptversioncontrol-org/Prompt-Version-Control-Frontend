@@ -8,11 +8,18 @@ import { Resend } from 'resend';
 import { InvitationEmailTemplate } from '@/shared/components/mail/invitation-email-template';
 import crypto from 'crypto';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function createNewWorkspace(
   workspaceData: CreateWorkspaceInput,
 ): Promise<CreateWorkspaceResponse> {
+  const apiKey = process.env.RESEND_API_KEY;
+  const resend = apiKey ? new Resend(apiKey) : null;
+
+  if (!apiKey) {
+    console.warn(
+      'RESEND_API_KEY is missing. Email invitations will be skipped.',
+    );
+  }
+
   try {
     const baseSlug = generateSlug(workspaceData.name);
 
@@ -68,33 +75,39 @@ export async function createNewWorkspace(
 
             const joinLink = `${process.env.NEXT_PUBLIC_APP_URL}/workspaces/join?token=${token}`;
 
-            const { error: sendError } = await resend.emails.send({
-              from: 'PVC <noreply@mail.adampukaluk.pl>',
-              to: userToInvite.email,
-              subject: `Invitation to join ${workspace.name}`,
-              react: InvitationEmailTemplate({
-                inviterName,
-                workspaceName: workspace.name || 'Workspace',
-                joinLink,
-              }) as React.ReactElement,
-            });
+            if (resend) {
+              const { error: sendError } = await resend.emails.send({
+                from: 'PVC <noreply@mail.adampukaluk.pl>',
+                to: userToInvite.email,
+                subject: `Invitation to join ${workspace.name}`,
+                react: InvitationEmailTemplate({
+                  inviterName,
+                  workspaceName: workspace.name || 'Workspace',
+                  joinLink,
+                }) as React.ReactElement,
+              });
 
-            if (sendError) {
-              console.error(
-                `❌ Failed to send email to ${userToInvite.email}:`,
-                sendError,
-              );
+              if (sendError) {
+                console.error(
+                  `Failed to send email to ${userToInvite.email}:`,
+                  sendError,
+                );
+              } else {
+                console.log(`Invitation sent to ${userToInvite.email}`);
+              }
             } else {
-              console.log(`✅ Invitation sent to ${userToInvite.email}`);
+              console.log(
+                `Resend not configured. Skipping email to ${userToInvite.email}. Link: ${joinLink}`,
+              );
             }
           } else {
             console.warn(
-              `⚠️ User not found or no email for: ${contributor.username}`,
+              `User not found or no email for: ${contributor.username}`,
             );
           }
         } catch (inviteError) {
           console.error(
-            `❌ Failed to invite ${contributor.username}:`,
+            `Failed to invite ${contributor.username}:`,
             inviteError,
           );
         }
@@ -103,7 +116,7 @@ export async function createNewWorkspace(
 
     return workspace;
   } catch (error) {
-    console.error('❌ Error creating workspace:', error);
+    console.error('Error creating workspace:', error);
     throw error;
   }
 }
