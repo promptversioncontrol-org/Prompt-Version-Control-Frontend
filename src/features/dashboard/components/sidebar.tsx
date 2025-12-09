@@ -85,7 +85,7 @@ export function Sidebar({ className }: SidebarProps) {
       <div className="p-6 flex items-center gap-3 overflow-hidden">
         <div className="flex-shrink-0">
           <Image
-            src="/icon/logo.svg"
+            src="/logo.svg"
             alt="Logo"
             width={32}
             height={32}

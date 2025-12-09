@@ -23,6 +23,7 @@ interface Workspace {
   slug: string;
   description: string | null;
   createdAt: Date;
+  visibility: string; // Dodano, ponieważ jest używane w nowym kodzie
 }
 
 interface UserWithWorkspaces {
@@ -68,22 +69,26 @@ export default async function UserWorkspacesPage({
 
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-zinc-200">Workspaces</h2>
-        <Link href={`/dashboard/workspaces/new`}>
-          <Button className="bg-gradient-to-r from-zinc-100 to-white hover:from-white hover:to-zinc-100 text-black font-medium shadow-lg shadow-white/10 transition-all">
-            Create Workspace
-          </Button>
-        </Link>
+        <Button
+          asChild
+          className="bg-gradient-to-r from-zinc-100 to-white hover:from-white hover:to-zinc-100 text-black font-medium shadow-lg shadow-white/10 transition-all"
+        >
+          <Link href={`/dashboard/workspaces/new`}>Create Workspace</Link>
+        </Button>
       </div>
 
       {user.workspacesOwned.length === 0 ? (
         <Card className="bg-zinc-900/40 backdrop-blur-xl border-zinc-800/50">
           <CardContent className="py-12 text-center">
             <p className="text-zinc-400 mb-4">No workspaces yet</p>
-            <Link href={`/dashboard/workspaces/new`}>
-              <Button className="bg-zinc-800/50 border border-zinc-700/50 text-zinc-200 hover:bg-zinc-700/50 hover:text-white backdrop-blur-sm transition-all">
+            <Button
+              asChild
+              className="bg-zinc-800/50 border border-zinc-700/50 text-zinc-200 hover:bg-zinc-700/50 hover:text-white backdrop-blur-sm transition-all"
+            >
+              <Link href={`/dashboard/workspaces/new`}>
                 Create Your First Workspace
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -104,6 +109,8 @@ export default async function UserWorkspacesPage({
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-2 text-sm text-zinc-500">
+                    <span className="capitalize">{workspace.visibility}</span>
+                    <span>•</span>
                     <span>
                       {new Date(workspace.createdAt).toLocaleDateString()}
                     </span>
