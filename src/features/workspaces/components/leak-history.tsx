@@ -51,29 +51,29 @@ export function LeakHistory({ workspaceSlug }: LeakHistoryProps) {
     getLeakUsers(workspaceSlug).then(setUsers).catch(console.error);
   }, [workspaceSlug]);
 
-  useEffect(() => {
-    const fetchLeaks = async () => {
-      setLoading(true);
-      try {
-        const result = await getWorkspaceLeaks({
-          workspaceSlug,
-          severity: severity === 'all' ? undefined : severity,
-          username: selectedUser === 'all' ? undefined : selectedUser,
-          search: search.length > 2 ? search : undefined,
-        });
-        setLeaks(result.leaks || []);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchLeaks = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await getWorkspaceLeaks({
+        workspaceSlug,
+        severity: severity === 'all' ? undefined : severity,
+        username: selectedUser === 'all' ? undefined : selectedUser,
+        search: search.length > 2 ? search : undefined,
+      });
+      setLeaks(result.leaks || []);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }, [workspaceSlug, severity, selectedUser, search]);
 
+  useEffect(() => {
     const timer = setTimeout(() => {
       fetchLeaks();
     }, 300);
     return () => clearTimeout(timer);
-  }, [workspaceSlug, severity, selectedUser, search]);
+  }, [fetchLeaks]);
 
   return (
     <div className="space-y-4">

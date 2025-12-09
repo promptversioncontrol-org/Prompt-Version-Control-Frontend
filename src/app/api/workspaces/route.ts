@@ -34,13 +34,29 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Find workspace to get ID and verify access
+  const workspace = await prisma.workspace.findFirst({
+    where: {
+      slug: workspaceName,
+      userId: session.user.id,
+    },
+    select: { id: true },
+  });
+
+  if (!workspace) {
+    return NextResponse.json(
+      { error: 'Workspace not found or access denied' },
+      { status: 404 },
+    );
+  }
+
   const bucket = process.env.AWS_BUCKET_NAME;
 
   if (!bucket) {
     return NextResponse.json({ error: 'Missing bucket name' }, { status: 500 });
   }
 
-  const basePrefix = `pvc/users/${session.user.id}/workspaces/${workspaceName}/`;
+  const basePrefix = `pvc/workspaces/${workspace.id}/`;
 
   try {
     if (date) {
@@ -152,7 +168,7 @@ export async function POST(request: NextRequest) {
     const workspace = await createNewWorkspace(workspaceData);
 
     try {
-      await createWorkspaceFolder(session.user.id, workspace.slug);
+      await createWorkspaceFolder(workspace.id);
       console.log('✅ S3 folder created for workspace:', workspace.slug);
     } catch (s3Error) {
       console.error('⚠️ Failed to create S3 folder:', s3Error);
