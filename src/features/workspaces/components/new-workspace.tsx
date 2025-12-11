@@ -13,6 +13,7 @@ import {
   Loader2,
   ChevronRight,
 } from 'lucide-react';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import {
   Card,
@@ -42,17 +43,12 @@ import {
 } from '@/shared/components/ui/select';
 
 // Types
-import type { WorkspaceContributorInput } from '../types/workspace.types';
 import {
-  searchUsers,
-  type SearchUserResult,
-} from '@/features/users/actions/search-users';
-
-interface WorkspaceFormData {
-  name: string;
-  description?: string;
-  contributors: WorkspaceContributorInput[];
-}
+  createWorkspaceSchema,
+  type CreateWorkspaceDto,
+} from '../contracts/create-workspace.dto';
+import { type SearchUserResult } from '@/features/users/contracts/user.dto';
+import { searchUsers } from '@/features/users/actions/search-users';
 
 export default function NewWorkspacePage() {
   const router = useRouter();
@@ -65,7 +61,8 @@ export default function NewWorkspacePage() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
 
-  const form = useForm<WorkspaceFormData>({
+  const form = useForm({
+    resolver: zodResolver(createWorkspaceSchema),
     defaultValues: {
       name: '',
       description: '',
@@ -118,7 +115,7 @@ export default function NewWorkspacePage() {
     setSearchFocused(false);
   };
 
-  const onSubmit = async (data: WorkspaceFormData) => {
+  const onSubmit = async (data: CreateWorkspaceDto) => {
     setIsLoading(true);
     setError(null);
 

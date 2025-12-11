@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
@@ -23,35 +24,30 @@ import {
 import { addSshKey, deleteSshKey } from '../actions/ssh-actions';
 import { Trash2, Key } from 'lucide-react';
 
-interface SshKey {
-  id: string;
-  name: string | null;
-  fingerprint: string;
-  createdAt: Date;
-}
+import {
+  createSshKeySchema,
+  type CreateSshKeyDto,
+  type SshKeyModel,
+} from '../contracts/ssh-key.dto';
 
 interface SshKeyManagerProps {
-  initialKeys: SshKey[];
-}
-
-interface FormData {
-  name: string;
-  publicKey: string;
+  initialKeys: SshKeyModel[];
 }
 
 export function SshKeyManager({ initialKeys }: SshKeyManagerProps) {
-  const [keys, setKeys] = useState<SshKey[]>(initialKeys);
+  const [keys, setKeys] = useState<SshKeyModel[]>(initialKeys);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const form = useForm<FormData>({
+  const form = useForm<CreateSshKeyDto>({
+    resolver: zodResolver(createSshKeySchema),
     defaultValues: {
       name: '',
       publicKey: '',
     },
   });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: CreateSshKeyDto) => {
     setIsLoading(true);
     setError(null);
     const formData = new FormData();
@@ -106,7 +102,6 @@ export function SshKeyManager({ initialKeys }: SshKeyManagerProps) {
               <FormField
                 control={form.control}
                 name="name"
-                rules={{ required: 'Name is required' }}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-zinc-200">Title</FormLabel>
@@ -124,7 +119,6 @@ export function SshKeyManager({ initialKeys }: SshKeyManagerProps) {
               <FormField
                 control={form.control}
                 name="publicKey"
-                rules={{ required: 'Public key is required' }}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-zinc-200">Key</FormLabel>

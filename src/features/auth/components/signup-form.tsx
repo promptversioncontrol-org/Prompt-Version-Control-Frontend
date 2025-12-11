@@ -33,7 +33,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { signIn, signUp } from '@/shared/lib/auth-client';
-import { setupUserFolder } from '../services/setup-new-user';
+
 import { AuthBackground } from '@/shared/components/ui/auth-background';
 
 export default function SignupCardSection() {
@@ -61,11 +61,7 @@ export default function SignupCardSection() {
         onSuccess: async (ctx) => {
           console.log('Registered');
           if (ctx.data?.user?.id) {
-            try {
-              await setupUserFolder(ctx.data.user.id);
-            } catch (err) {
-              console.error('Failed to setup user folder', err);
-            }
+            console.log('User registered:', ctx.data.user.id);
           }
           setSuccess(true);
         },
@@ -99,20 +95,7 @@ export default function SignupCardSection() {
           console.log('Successfully signed in!', ctx);
 
           if (ctx.data?.user?.id) {
-            try {
-              // Wywołaj Server Action
-              const result = await setupUserFolder(ctx.data.user.id);
-
-              if (result.success) {
-                console.log('S3 folder created:', result.data);
-              } else {
-                console.error('Failed to create S3 folder:', result.error);
-                setError('Account created but workspace setup failed');
-              }
-            } catch (error) {
-              console.error('Failed to setup folder:', error);
-              setError('Account created but workspace setup failed');
-            }
+            console.log('User created:', ctx.data.user.id);
           }
         },
         onError: (ctx) => {

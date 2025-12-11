@@ -4,13 +4,7 @@ import { prisma } from '@/shared/lib/prisma';
 import { auth } from '@/shared/lib/auth';
 import { headers } from 'next/headers';
 
-export interface SearchUserResult {
-  id: string;
-  name: string | null;
-  username: string | null;
-  email: string | null;
-  image: string | null;
-}
+import type { SearchUserResult } from '../contracts/user.dto';
 
 export async function searchUsers(query: string): Promise<SearchUserResult[]> {
   if (!query || query.length < 2) {

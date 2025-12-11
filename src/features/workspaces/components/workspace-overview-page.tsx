@@ -4,10 +4,12 @@ import { getWorkspaceBySlug } from '../services/get-workspace-by-slug';
 import { Card } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
-import { Settings, Calendar, Activity, ShieldCheck } from 'lucide-react';
+import { Settings, Calendar, Activity, ShieldCheck, Users } from 'lucide-react';
 import { LiveStreamFeed } from './live-stream-feed';
 import { LeakHistory } from './leak-history';
 import { LeakLeaderboard } from './leak-leaderboard';
+import { WorkspaceUsersList } from './workspace-users-list';
+import { WorkspaceBreadcrumb } from './workspace-breadcrumb';
 import {
   Tabs,
   TabsContent,
@@ -44,7 +46,8 @@ export default async function WorkspaceOverviewPage({
       <div className="container max-w-7xl mx-auto py-8 px-6 relative z-10 space-y-8">
         {/* HEADER SECTION */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-800/50">
-          <div className="space-y-1">
+          <div className="space-y-3">
+            <WorkspaceBreadcrumb workspaceSlug={workspace.slug} />
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
                 {workspace.name}
@@ -118,6 +121,12 @@ export default async function WorkspaceOverviewPage({
                 >
                   <ShieldCheck className="h-4 w-4 mr-2" /> Leak History
                 </TabsTrigger>
+                <TabsTrigger
+                  value="users"
+                  className="data-[state=active]:bg-zinc-800 text-zinc-400 data-[state=active]:text-zinc-100"
+                >
+                  <Users className="h-4 w-4 mr-2" /> Users
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="live" className="mt-4">
@@ -141,6 +150,14 @@ export default async function WorkspaceOverviewPage({
 
               <TabsContent value="history" className="mt-4">
                 <LeakHistory workspaceSlug={workspace.slug} />
+              </TabsContent>
+
+              <TabsContent value="users" className="mt-4">
+                <WorkspaceUsersList
+                  contributors={workspace.contributors}
+                  owner={workspace.user}
+                  workspaceSlug={workspace.slug}
+                />
               </TabsContent>
             </Tabs>
           </div>
