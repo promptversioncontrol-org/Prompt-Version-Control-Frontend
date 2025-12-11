@@ -2,6 +2,7 @@ import { prisma } from '@/shared/lib/prisma';
 import type { CreateOrganizationInput } from '../types/organization.types';
 import { generateSlug, ensureUniqueSlug } from '@/shared/utils/slug';
 import { Resend } from 'resend';
+import { InvitationEmailTemplate } from '@/shared/components/mail/invitation-email-template';
 import crypto from 'crypto';
 
 // const resend = new Resend(process.env.RESEND_API_KEY);
@@ -9,7 +10,7 @@ import crypto from 'crypto';
 export async function createOrganization(orgData: CreateOrganizationInput) {
   const apiKey = process.env.RESEND_API_KEY;
   const resend = apiKey ? new Resend(apiKey) : null;
-  const baseSlug = generateSlug(orgData.name);
+  const baseSlug = orgData.slug || generateSlug(orgData.name);
 
   // Check unique slug for organizations
   const existingOrgs = await prisma.organization.findMany({
@@ -38,10 +39,25 @@ export async function createOrganization(orgData: CreateOrganizationInput) {
       },
     });
 
-    if (orgData.createDefaultWorkspaces) {
+    // 1. Create new workspaces
+    if (orgData.workspacesToCreate && orgData.workspacesToCreate.length > 0) {
+      for (const wsName of orgData.workspacesToCreate) {
+        const wsSlug = generateSlug(`${org.slug}-${wsName}`);
+        // Note: verify slug uniqueness logic if needed, but for now simple generation
+        await tx.workspace.create({
+          data: {
+            name: wsName,
+            slug: wsSlug,
+            userId: orgData.userId,
+            organizationId: org.id,
+          },
+        });
+      }
+    }
+    // Fallback for backward compatibility/default behavior
+    else if (orgData.createDefaultWorkspaces) {
       const defaultWorkspaces = ['Production', 'Staging', 'Development'];
       for (const wsName of defaultWorkspaces) {
-        const wsSlug = ensureUniqueSlug(generateSlug(wsName), []);
         await tx.workspace.create({
           data: {
             name: wsName,
@@ -53,17 +69,32 @@ export async function createOrganization(orgData: CreateOrganizationInput) {
       }
     }
 
+    // 2. Link existing workspaces
+    if (orgData.workspacesToLink && orgData.workspacesToLink.length > 0) {
+      await tx.workspace.updateMany({
+        where: {
+          id: { in: orgData.workspacesToLink },
+          userId: orgData.userId, // Security check: must own the workspace
+        },
+        data: {
+          organizationId: org.id,
+        },
+      });
+    }
+
     return org;
   });
 
-  if (orgData.contributors && orgData.contributors.length > 0) {
+  // 3. Handle Invitations
+  const contributors = orgData.invitations || [];
+  if (contributors.length > 0) {
     const inviter = await prisma.user.findUnique({
       where: { id: orgData.userId },
       select: { name: true, username: true },
     });
     const inviterName = inviter?.name || inviter?.username || 'Someone';
 
-    for (const contributor of orgData.contributors) {
+    for (const contributor of contributors) {
       if (!contributor.email) continue;
 
       try {
@@ -74,6 +105,7 @@ export async function createOrganization(orgData: CreateOrganizationInput) {
           select: { id: true },
         });
 
+        // Add regular workspace invite logic if needed, but this is ORG invite
         await prisma.organizationInvitation.create({
           data: {
             token,
@@ -93,12 +125,12 @@ export async function createOrganization(orgData: CreateOrganizationInput) {
             from: 'PVC <noreply@mail.adampukaluk.pl>',
             to: contributor.email,
             subject: `Invitation to join ${organization.name} on PVC`,
-            html: `<p>${inviterName} invited you to join <strong>${organization.name}</strong>.</p><p><a href="${joinLink}">Click here to join</a></p>`,
+            react: InvitationEmailTemplate({
+              inviterName,
+              workspaceName: organization.name,
+              joinLink,
+            }) as React.ReactElement,
           });
-        } else {
-          console.log(
-            `Resend not configured. Skipping email to ${contributor.email}.`,
-          );
         }
       } catch (e) {
         console.error(`Failed to invite ${contributor.email}`, e);

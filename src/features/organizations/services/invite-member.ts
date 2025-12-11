@@ -1,6 +1,7 @@
 import { prisma } from '@/shared/lib/prisma';
 import { Resend } from 'resend';
 import crypto from 'crypto';
+import { OrganizationInvitationEmailTemplate } from '@/shared/components/mail/organization-invitation-email-template';
 
 // const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -28,6 +29,22 @@ export async function inviteMember(
     select: { id: true },
   });
 
+  // Check if user is already a member
+  if (existingUser) {
+    const existingMember = await prisma.organizationMember.findUnique({
+      where: {
+        organizationId_userId: {
+          organizationId,
+          userId: existingUser.id,
+        },
+      },
+    });
+
+    if (existingMember) {
+      throw new Error('User is already a member of this organization.');
+    }
+  }
+
   await prisma.organizationInvitation.create({
     data: {
       token,
@@ -40,16 +57,30 @@ export async function inviteMember(
     },
   });
 
-  const joinLink = `${process.env.NEXT_PUBLIC_APP_URL}/organizations/join?token=${token}`;
+  const joinLink = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/organizations/join?token=${token}`;
 
   if (resend) {
-    await resend.emails.send({
-      from: 'PVC <noreply@mail.adampukaluk.pl>',
-      to: email,
-      subject: `Invitation to join ${organization.name} on PVC`,
-      html: `<p>${inviterName} invited you to join <strong>${organization.name}</strong> as <strong>${role}</strong>.</p><p><a href="${joinLink}">Click here to join</a></p>`,
-    });
+    try {
+      console.log(
+        `[InviteMember] Sending email to ${email} with link: ${joinLink}`,
+      );
+      const result = await resend.emails.send({
+        from: 'PVC <noreply@mail.adampukaluk.pl>',
+        to: email,
+        subject: `Invitation to join ${organization.name} on PVC`,
+        react: OrganizationInvitationEmailTemplate({
+          inviterName,
+          organizationName: organization.name,
+          joinLink,
+        }) as React.ReactElement,
+      });
+      console.log(`[InviteMember] Email sent result:`, result);
+    } catch (error) {
+      console.error(`[InviteMember] Failed to send email:`, error);
+    }
   } else {
-    console.log(`Resend not configured. Skipping email to ${email}.`);
+    console.log(
+      `[InviteMember] Resend not configured (Key present? ${!!process.env.RESEND_API_KEY}). Skipping email to ${email}. Link: ${joinLink}`,
+    );
   }
 }

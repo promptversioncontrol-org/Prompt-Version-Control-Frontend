@@ -2,13 +2,16 @@ import { Organization } from '@prisma/client';
 
 export interface CreateOrganizationInput {
   name: string;
+  slug?: string;
   description?: string;
   image?: string;
   website?: string;
   industry?: string;
   userId: string; // Creator
-  contributors?: { email: string; role: string }[];
-  createDefaultWorkspaces?: boolean;
+  invitations?: { email: string; role: string }[];
+  workspacesToCreate?: string[];
+  workspacesToLink?: string[];
+  createDefaultWorkspaces?: boolean; // Deprecated but kept for compatibility if needed, or remove
 }
 
 export type OrganizationWithDetails = Organization & {

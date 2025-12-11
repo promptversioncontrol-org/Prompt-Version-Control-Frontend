@@ -8,6 +8,7 @@ export interface SearchUserResult {
   id: string;
   name: string | null;
   username: string | null;
+  email: string | null;
   image: string | null;
 }
 
@@ -32,6 +33,7 @@ export async function searchUsers(query: string): Promise<SearchUserResult[]> {
             OR: [
               { username: { contains: query, mode: 'insensitive' } },
               { name: { contains: query, mode: 'insensitive' } },
+              { email: { contains: query, mode: 'insensitive' } },
             ],
           },
           {
@@ -43,6 +45,7 @@ export async function searchUsers(query: string): Promise<SearchUserResult[]> {
         id: true,
         name: true,
         username: true,
+        email: true,
         image: true,
       },
       take: 10,

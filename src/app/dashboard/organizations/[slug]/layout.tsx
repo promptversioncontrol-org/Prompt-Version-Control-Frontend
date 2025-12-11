@@ -3,7 +3,6 @@ import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { getOrganizationBySlug } from '@/features/organizations/services/get-organization-by-slug';
 import { OrganizationHeader } from '@/features/organizations/components/organization-header';
-import { OrganizationTabs } from '@/features/organizations/components/organization-tabs';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -58,9 +57,6 @@ export default async function OrganizationLayout({
       <div className="border-b">
         <div className="container mx-auto py-6">
           <OrganizationHeader organization={organization} userRole={userRole} />
-          <div className="mt-6">
-            <OrganizationTabs slug={slug} />
-          </div>
         </div>
       </div>
       <div className="container mx-auto py-8">{children}</div>
