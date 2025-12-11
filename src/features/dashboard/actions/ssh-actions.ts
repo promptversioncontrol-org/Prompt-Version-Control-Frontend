@@ -1,6 +1,7 @@
 'use server';
 
 import { z } from 'zod';
+import { createHash } from 'crypto';
 import { prisma } from '@/shared/lib/prisma';
 import { auth } from '@/shared/lib/auth';
 import { headers } from 'next/headers';
@@ -29,17 +30,13 @@ export async function addSshKey(formData: FormData) {
   const result = addSshKeySchema.safeParse({ name, publicKey });
 
   if (!result.success) {
-    return { error: result.error.errors[0].message };
+    return { error: result.error.issues[0].message };
   }
 
   try {
-    // Simple fingerprint generation (mock for now, or use a library if available, but keeping it simple)
-    // In a real app, we'd parse the key and generate a proper fingerprint.
-    // For now, we'll just use a hash of the key or a random string if we can't easily generate it without extra libs.
-    // Let's just use a simple base64 of the key part as a pseudo-fingerprint for uniqueness constraint if needed,
-    // but the schema says fingerprint is unique.
-    // Let's try to generate a pseudo-fingerprint.
-    const fingerprint = Buffer.from(publicKey).toString('base64').slice(0, 32);
+    // Generate proper SHA256 fingerprint to match verification logic
+    const clean = result.data.publicKey.split(' ').slice(0, 2).join(' ');
+    const fingerprint = createHash('sha256').update(clean).digest('base64');
 
     await prisma.sshKey.create({
       data: {

@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     }
 
     // Verify challenge hasn't expired
-    const verification = await prisma.verification.findUnique({
+    const verification = await prisma.verification.findFirst({
       where: { identifier: `ssh-${fingerprint}` },
     });
 

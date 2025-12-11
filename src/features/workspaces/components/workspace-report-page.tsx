@@ -8,7 +8,6 @@ import {
   CardTitle,
 } from '@/shared/components/ui/card';
 import Link from 'next/link';
-import { Badge } from '@/shared/components/ui/badge';
 
 interface WorkspaceReportPageProps {
   username: string;
@@ -49,12 +48,6 @@ export default async function WorkspaceReportPage({
               {workspace.name} / {date}
             </CardTitle>
             <div className="flex items-center gap-2 text-sm text-zinc-400">
-              <Badge
-                variant="outline"
-                className="capitalize border-zinc-700/60 text-zinc-300"
-              >
-                {workspace.visibility}
-              </Badge>
               <Link
                 href={`/dashboard/workspaces/${workspace.slug}`}
                 className="text-zinc-400 hover:text-zinc-200 underline-offset-4 hover:underline"

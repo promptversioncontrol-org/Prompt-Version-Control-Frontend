@@ -80,13 +80,13 @@ export const LandingPage = () => {
           Now supporting Codex AI Agents
         </div>
 
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-8 perspective-800">
           <Image
             src="/icon/logo.svg"
             alt="PVC Logo"
             width={180}
             height={180}
-            className="drop-shadow-[0_0_35px_rgba(255,255,255,0.3)]"
+            className="drop-shadow-[0_0_35px_rgba(255,255,255,0.3)] logo-spin-3d"
           />
         </div>
 

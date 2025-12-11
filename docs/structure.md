@@ -1,59 +1,122 @@
-# Struktura projektu (features/shared + app jako entrypoint)
+# Project Structure (features/shared + app as entrypoint)
+Note: when using `'`, escape it with &apos;, &#39;, &lsquo;, &rsquo;, etc.
 
-Cel: logika domenowa i UI siedzą w `src/features` oraz `src/shared`. Katalog `src/app` trzyma tylko routing/entrypoint (page.tsx, layout.tsx, API route handlers) i wywołuje gotowe komponenty/serwisy.
+Goal: domain logic and UI live inside `src/features` and `src/shared`. The `src/app` directory acts only as the entrypoint layer (routing, page.tsx, layout.tsx, API handlers) and imports ready-made components/services from features.
 
-## Szkielet katalogów
-```
+## Directory Structure
 src/
   app/
-    <route>/page.tsx           // entrypoint, importuje komponent z features
-    api/<domain>/route.ts      // handler woła serwis z features/*
+    <route>/page.tsx           // entrypoint, imports page component from features
+    api/<domain>/route.ts      // handler delegating to services in features/*
     layout.tsx, globals.css
   features/
     <feature>/
-      components/              // UI i „page component” dla routów
-      services/                // server actions / logika (prisma, S3, fetch)
-      contracts/               // ewentualne DTO/schema walidacji
-      types/                   // typy domenowe
-      hooks/                   // hooki specyficzne dla feature (opcjonalnie)
+      components/              // UI and page components
+      services/                // server actions / logic (prisma, S3, fetch)
+      contracts/               // optional DTO/validation schemas
+      types/                   // domain types
+      hooks/                   // feature-specific hooks
   shared/
-    components/ui/             // base UI (shadcn)
-    components/                // wspólne komponenty (np. Threads)
-    hooks/                     // hooki współdzielone
-    lib/                       // klienci (prisma, auth, s3), config
-    utils/                     // helpery (np. slug)
-```
+    components/ui/             // base UI components (shadcn)
+    components/                // shared UI components
+    hooks/                     // shared hooks
+    lib/                       // prisma, auth, s3 clients, config
+    utils/                     // generic helpers (slug, formatters, etc.)
 
-## Zasady dla `src/app`
-- `page.tsx` ma być cienkim wrapperem: importuje „page component” z `features/<feature>/components/...` i go renderuje (patrz `app/sign-in/page.tsx`, `app/workspaces/new/page.tsx`).
-- Routing dynamiczny (`[username]`, `[workspace]`) powinien wołać serwisy z `features/*/services` zamiast trzymać logikę w pliku routu; serwis zwraca dane, komponent odpowiada za UI.
-- `app/api/**/route.ts` też tylko deleguje do serwisów z `features/*/services` (bez bezpośredniego prisma/s3/fetch).
-- Tylko tu trzymamy `metadata`, layouty, loading/error boundary dla Next.js.
+## Rules for src/app
+- `page.tsx` must be a thin wrapper that imports a page component from `features/<feature>/components` and renders it.
+- Dynamic routes (`[username]`, `[workspace]`) must call services from `features/*/services` instead of placing logic in the route.
+- `app/api/**/route.ts` must delegate to services in `features/*/services` (no direct prisma/s3/fetch calls).
+- Only here we keep Next.js metadata, layout files, and loading/error boundaries.
 
-## Zasady dla `src/features/<feature>`
-- `components/`: komponenty w PascalCase, z `use client` gdy potrzebne. Możesz dodawać „page components” (np. `NewWorkspace`) wołane z routów.
-- `services/`: logika serwerowa (prisma, S3, zapisy do DB). Gdy kod to server action, dodaj `'use server'` na górze pliku.
-- `types/`: typy wejścia/wyjścia (`CreateWorkspaceInput`, `WorkspaceVisibility`, itp.). Importuj je w komponentach i serwisach.
-- `contracts/`: opcjonalne schematy walidacji/DTO jeśli potrzebne dla API.
-- `hooks/`: hooki tylko dla tego feature; jeśli mają być reużywalne globalnie, przenieś do `shared/hooks`.
-- Testy (gdy dodajemy) trzymaj przy plikach (`*.test.ts[x]`) albo w `__tests__` w obrębie feature.
+## Rules for src/features/<feature>
+- `components/`:
+  - PascalCase filenames.
+  - Add &apos;use client&apos; at the top when browser APIs are used.
+  - Contains page components imported by routes.
+- `services/`:
+  - All server logic lives here (Prisma, S3, DB writes).
+  - Server actions require &apos;use server&apos; at the top.
+- `types/`:
+  - Input/output types shared across components and services.
+- `contracts/`:
+  - Optional DTO/validation schemas.
+- `hooks/`:
+  - Hooks specific to the feature (global ones go into shared/hooks).
+- Tests may live next to files or inside a `__tests__` folder.
 
-## Zasady dla `src/shared`
-- `components/ui`: bazowe klocki UI (button, card, form...). Nie importują logiki domenowej.
-- `components/`: współdzielone komponenty z logiką UI (np. `Threads`), dalej bez zależności domenowych.
-- `hooks`: uniwersalne hooki używane w wielu feature’ach.
-- `lib`: konfiguracja/klienci (prisma, auth, s3). Tu nie ma logiki biznesowej.
-- `utils`: helpery (np. `generateSlug`, `ensureUniqueSlug`, `isValidUsername`).
+## Rules for src/shared
+- `components/ui/`:
+  - Base UI primitives; domain-agnostic.
+- `components/`:
+  - Shared UI components (e.g., Threads).
+- `hooks/`:
+  - Reusable hooks across features.
+- `lib/`:
+  - Prisma, auth, s3 clients, configs; no domain logic.
+- `utils/`:
+  - Generic helpers like slug generation, formatting utilities, validators.
 
-## Konwencje dodatkowe
-- Ścieżki importów przez alias `@/*` (patrz `tsconfig.json`).
-- Nazewnictwo plików: komponenty w PascalCase (`NewWorkspace.tsx`), serwisy/dto w kebab-case (`create-new-workspace.ts`).
-- Pliki, które dotykają przeglądarki (useState, eventy) zaczynają od `'use client'`; serwerowe helpery/serwisy od `'use server'` gdy to server action.
-- Jeden feature = jedna odpowiedzialność. Nowe flow → nowy folder w `features/` i page component wywołany z `src/app`.
+## Conventions
+- Use `@/*` import alias.
+- Naming:
+  - Components → PascalCase (e.g., NewWorkspace.tsx)
+  - Services/DTOs → kebab-case (e.g., create-new-workspace.ts)
+- Browser-dependent files must begin with &apos;use client&apos;.
+- Server actions must begin with &apos;use server&apos;.
+- One feature = one responsibility; new flow → new folder in features and a page component inside components.
 
-## Przykłady z repo
-- `src/app/sign-in/page.tsx` → tylko `LoginCardSection` z `features/auth/components`.
-- `src/app/workspaces/new/page.tsx` → tylko `NewWorkspace` z `features/workspaces/components`.
-- `src/shared/utils/slug.ts` → helper ogólny; używany w `features/workspaces/services/create-new-workspace.ts`.
+## Examples
+- `src/app/sign-in/page.tsx` → imports LoginCardSection from features/auth/components.
+- `src/app/workspaces/new/page.tsx` → imports NewWorkspace from features/workspaces/components.
+- `src/shared/utils/slug.ts` → generic helper reused in multiple services.
 
-Trzymaj się tych zasad przy nowych routach/feature’ach, żeby `app/` pozostało wyłącznie warstwą routingu, a logika i UI żyły w `features/` + współdzielone klocki w `shared/`.
+Follow these rules for all new routes/features so that `app/` stays a thin routing layer while domain logic and UI live in `features/` and shared utilities stay inside `shared/`. Use `dto/` for  dto 
+ japierdole tu masz przykłąd jak to ma wygladac contact/contracts/user.dto.ts - import { z } from 'zod';
+
+export const contactSchema = z.object({
+  title: z.string().min(3, { error: 'Title is required' }),
+  email: z.email({ error: 'Email is required' }),
+  content: z
+    .string()
+    .min(3, { error: 'Content is required' })
+    .max(150, { error: 'Max 150 characters' }),
+});
+
+export type ContactDto = z.infer<typeof contactSchema>;   contact/components/ContactForm.tsx - 'use client';
+
+import { Input } from '@/shared/components/Input';
+import { SubmitHandler, useForm } from 'react-hook-form';
+import { ContactDto, contactSchema } from '../contracts/contact.dto';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { sendContactEmail } from '../services/send-contact-email';
+
+export const ContactForm = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ContactDto>({
+    resolver: zodResolver(contactSchema),
+  });
+
+  const handleContactSubmit: SubmitHandler<ContactDto> = async (data) => {
+    console.log({ data });
+    const result = await sendContactEmail(data);
+    console.log({ result });
+    if (result.success) {
+      // success toast
+    } else {
+      // error toast
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(handleContactSubmit)}>
+      <Input label="Subject" {...register('title')} error={errors.title} />
+      <Input label="E-mail" {...register('email')} error={errors.email} />
+      <Input label="Content" {...register('content')} error={errors.content} />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}; to tylko przykąłd porsty jak ma dzilaac sturktura dto w moim projekcie

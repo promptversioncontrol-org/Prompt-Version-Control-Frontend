@@ -1,13 +1,11 @@
-export type WorkspaceVisibility = 'private' | 'public';
-
 export interface WorkspaceContributorInput {
-  name: string;
+  username: string;
+  role: 'co-owner' | 'moderator' | 'member';
 }
 
 export interface CreateWorkspaceInput {
   name: string;
   description?: string;
-  visibility: WorkspaceVisibility;
   userId: string;
   contributors?: WorkspaceContributorInput[];
 }
@@ -17,7 +15,6 @@ export interface CreateWorkspaceResponse {
   name: string | null;
   slug: string;
   description: string | null;
-  visibility: string;
   createdAt: Date;
   userId: string;
 }

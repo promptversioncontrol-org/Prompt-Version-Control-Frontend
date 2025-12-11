@@ -145,7 +145,6 @@ export async function POST(request: NextRequest) {
     const workspaceData: CreateWorkspaceInput = {
       name: body.name,
       description: body.description,
-      visibility: body.visibility,
       userId: session.user.id,
       contributors: body.contributors,
     };

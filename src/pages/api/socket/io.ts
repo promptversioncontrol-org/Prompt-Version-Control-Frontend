@@ -2,7 +2,17 @@ import { Server as NetServer } from 'http';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Server as ServerIO } from 'socket.io';
 import { Socket as NetSocket } from 'net';
-import { prisma } from '@/shared/lib/prisma';
+import { PrismaClient } from '@prisma/client';
+import { sendTelegramNotification } from '@/features/workspaces/contracts/send-telegram-notification';
+
+const prisma = new PrismaClient({
+  log: ['query', 'error', 'warn'],
+});
+
+console.log(
+  'Socket.io Handler - DATABASE_URL:',
+  process.env.DATABASE_URL ? 'Defined' : 'Undefined',
+);
 
 export const config = {
   api: {
@@ -21,31 +31,24 @@ export type NextApiResponseServerIO = NextApiResponse & {
 const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
   if (!res.socket.server.io) {
     console.log('*Socket.io start*');
+
     const httpServer: NetServer = res.socket.server;
     const io = new ServerIO(httpServer, {
       path: '/api/socket/io',
       addTrailingSlash: false,
     });
 
-    // 🔒 AUTHENTICATION MIDDLEWARE
     io.use(async (socket, next) => {
       const token = socket.handshake.auth.token;
-      // Allow workspaceId from auth or query params
       const workspaceId =
         socket.handshake.auth.workspaceId || socket.handshake.query.workspaceId;
 
-      if (!token) {
+      if (!token)
         return next(new Error('Authentication error: Missing session token'));
-      }
-
-      if (!workspaceId) {
+      if (!workspaceId)
         return next(new Error('Authentication error: Missing workspaceId'));
-      }
 
       try {
-        console.log(`🔍 Verifying token for workspace: ${workspaceId}`);
-
-        // 1. Verify Session
         const session = await prisma.session.findUnique({
           where: { token: token as string },
           include: { user: true },
@@ -57,29 +60,26 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
           );
         }
 
-        // 2. Verify Workspace Access
-        // Check if user is owner OR contributor
-        const hasAccess = await prisma.workspace.findFirst({
+        const workspace = await prisma.workspace.findFirst({
           where: {
             id: workspaceId as string,
             OR: [
-              { userId: session.user.id }, // Owner
-              { contributors: { some: { userId: session.user.id } } }, // Contributor
+              { userId: session.user.id },
+              { contributors: { some: { userId: session.user.id } } },
             ],
+          },
+          select: {
+            id: true,
+            slug: true,
+            userId: true,
           },
         });
 
-        if (!hasAccess) {
-          return next(
-            new Error(
-              'Authorization error: User does not have access to this workspace',
-            ),
-          );
-        }
+        if (!workspace)
+          return next(new Error('Authorization error: No access'));
 
-        // Success! Attach user and workspace to socket
         socket.data.user = session.user;
-        socket.data.workspaceId = workspaceId;
+        socket.data.workspace = workspace;
         next();
       } catch (error) {
         console.error('Socket auth error:', error);
@@ -89,33 +89,65 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
 
     io.on('connection', (socket) => {
       const user = socket.data.user;
-      const workspaceId = socket.data.workspaceId;
+      const workspace = socket.data.workspace;
 
       console.log(
-        `✅ User ${user.username} (${user.id}) connected to workspace ${workspaceId}`,
+        `User ${user.username} (${user.id}) connected to workspace ${workspace.id}`,
       );
 
-      // Join the workspace room to receive updates for this workspace
-      socket.join(workspaceId);
+      socket.join(workspace.id);
 
-      socket.on('cli:leak_detected', (msg) => {
+      socket.on('cli:leak_detected', async (msg) => {
         console.log(
-          `🚨 Leak reported by ${user.username} in workspace ${workspaceId}:`,
+          `Leak reported by ${user.username} in workspace ${workspace.id}:`,
           msg,
         );
 
-        // Broadcast to dashboard (frontend) in the same room
-        console.log(`📡 Broadcasting leak alert to room: ${workspaceId}`);
-        io.to(workspaceId).emit('dashboard:leak_alert', msg);
+        // Save to Database
+        try {
+          await prisma.workspaceLeak.create({
+            data: {
+              workspaceId: workspace.id,
+              severity: msg.severity,
+              message: msg.message,
+              snippet: msg.snippet,
+              source: msg.source,
+              username: msg.username,
+              ruleId: msg.ruleId,
+              sessionId: msg.sessionId,
+              detectedAt: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+            },
+          });
+          console.log('✅ Leak saved to database');
+        } catch (dbError) {
+          console.error('❌ Failed to save leak to database:', dbError);
+        }
+
+        io.to(workspace.id).emit('dashboard:leak_alert', msg);
+
+        try {
+          await sendTelegramNotification({
+            userId: workspace.userId,
+            workspaceSlug: workspace.slug || workspace.id,
+            event: msg,
+          });
+          console.log(
+            'Telegram notification dispatched for workspace',
+            workspace.id,
+          );
+        } catch (error) {
+          console.error('Failed to send Telegram notification:', error);
+        }
       });
 
       socket.on('disconnect', () => {
-        console.log(`❌ User ${user.username} disconnected`);
+        console.log(`User ${user.username} disconnected`);
       });
     });
 
     res.socket.server.io = io;
   }
+
   res.end();
 };
 

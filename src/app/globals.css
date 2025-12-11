@@ -249,3 +249,26 @@
 .loading-spinner {
   animation: spin 1s linear infinite;
 }
+
+@keyframes spin-3d {
+  0% {
+    transform: rotateY(0deg);
+    animation-timing-function: ease-in; 
+  }
+  50% {
+    transform: rotateY(180deg);
+    animation-timing-function: ease-out; 
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
+.perspective-800 {
+  perspective: 800px;
+}
+
+.logo-spin-3d {
+  transform-style: preserve-3d;
+  animation: spin-3d 1.25s linear infinite;
+}

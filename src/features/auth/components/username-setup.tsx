@@ -12,7 +12,7 @@ import {
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Button } from '@/shared/components/ui/button';
-
+import { useRouter } from 'next/navigation';
 import { AuthBackground } from '@/shared/components/ui/auth-background';
 
 export default function UsernameSetup() {
@@ -21,7 +21,7 @@ export default function UsernameSetup() {
   const [error, setError] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
-
+  const router = useRouter();
   const validateUsername = (
     value: string,
   ): { isValid: boolean; error?: string } => {
@@ -116,8 +116,9 @@ export default function UsernameSetup() {
         throw new Error(data.error || 'Failed to set username');
       }
 
-      // Force full reload to update session
-      window.location.href = '/';
+      // Redirect to home or user profile
+      router.push('/dashboard');
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

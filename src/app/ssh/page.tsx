@@ -17,7 +17,7 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { Key, Terminal, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
 
 export default function SSHPage() {
-  const { data: session, isLoading } = useSession();
+  const { data: session, isPending: isLoading } = useSession();
   const [pubkey, setPubkey] = useState('');
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
