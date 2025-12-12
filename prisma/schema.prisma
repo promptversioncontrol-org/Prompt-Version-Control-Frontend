@@ -14,42 +14,43 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  username      String?   @unique
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-  sshKeys       SshKey[]
-  workspacesOwned Workspace[]
-  contributions WorkspaceContributor[]
-  twoFactorEnabled Boolean? @default(false)
+  id               String                 @id
+  name             String
+  email            String
+  emailVerified    Boolean                @default(false)
+  image            String?
+  username         String?                @unique
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @default(now()) @updatedAt
+  sessions         Session[]
+  accounts         Account[]
+  sshKeys          SshKey[]
+  workspacesOwned  Workspace[]
+  contributions    WorkspaceContributor[]
+  twoFactorEnabled Boolean?               @default(false)
   twoFactor        TwoFactor?
 
   telegramTokens TelegramToken[]
-  userTelegrams UserTelegram[]
-  passkeys      Passkey[]
+  userTelegrams  UserTelegram[]
+  passkeys       Passkey[]
 
   @@unique([email])
   @@map("user")
 }
 
 model Passkey {
-  id             String   @id
-  name           String?
-  publicKey      String
-  userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  webauthnUserID String
-  counter        Int
-  deviceType     String
-  backedUp       Boolean
-  transports     String?
-  createdAt      DateTime?
+  id           String    @id
+  name         String?
+  publicKey    String
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialID String
+  aaguid       String
+  counter      Int
+  deviceType   String
+  backedUp     Boolean
+  transports   String?
+  createdAt    DateTime?
 
   @@map("passkey")
 }
@@ -60,10 +61,10 @@ model TwoFactor {
   backupCodes String
   userId      String
   user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId])
   @@map("two_factor")
 }
-
 
 model Session {
   id        String   @id
@@ -101,7 +102,7 @@ model Account {
 
 model Verification {
   id         String   @id
-  identifier String   @unique   
+  identifier String   @unique
   value      String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
@@ -116,25 +117,23 @@ model SshKey {
   publicKey   String
   fingerprint String   @unique
   createdAt   DateTime @default(now())
-  
-  userId      String
-  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("ssh_key")
 }
 
-
-
 model WorkspaceContributor {
-  id        String   @id @default(cuid())
-  role      String   @default("contributor") // owner, maintainer, contributor
-  addedAt   DateTime @default(now())
+  id      String   @id @default(cuid())
+  role    String   @default("contributor") // owner, maintainer, contributor
+  addedAt DateTime @default(now())
 
   workspaceId String
-  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([workspaceId, userId])
 }
@@ -144,13 +143,12 @@ model Workspace {
   name        String?
   slug        String   @default("workspace")
   createdAt   DateTime @default(now())
-  visibility  String   @default("public") 
+  visibility  String   @default("public")
   description String?
-  
-  
-  userId      String
-  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  contributors WorkspaceContributor[]
+
+  userId        String
+  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contributors  WorkspaceContributor[]
   securityRules SecurityRule[]
 
   @@unique([userId, slug])
@@ -159,8 +157,8 @@ model Workspace {
 
 model SecurityRule {
   id          String   @id @default(cuid())
-  pattern     String   // e.g. "node_modules", "*.env"
-  category    String?  // "Folders", "Files"
+  pattern     String // e.g. "node_modules", "*.env"
+  category    String? // "Folders", "Files"
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -169,8 +167,7 @@ model SecurityRule {
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@map("security_rule")
-} 
-
+}
 
 model TelegramToken {
   id        String   @id @default(cuid())
@@ -182,9 +179,9 @@ model TelegramToken {
 }
 
 model UserTelegram {
-  id       String   @id @default(cuid())
-  chatId   String   @unique
-  userId   String   @unique
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  chatId    String   @unique
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 }
