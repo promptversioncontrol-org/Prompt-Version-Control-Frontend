@@ -12,6 +12,7 @@ export interface GetWorkspaceLeaksParams {
   search?: string;
   username?: string;
   limit?: number;
+  sessionId?: string;
 }
 
 export async function getWorkspaceLeaks({
@@ -20,8 +21,18 @@ export async function getWorkspaceLeaks({
   source,
   search,
   username,
+  sessionId,
   limit = 50,
 }: GetWorkspaceLeaksParams & { username?: string }) {
+  const params = {
+    workspaceSlug,
+    severity,
+    source,
+    search,
+    username,
+    sessionId,
+    limit,
+  };
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -69,6 +80,10 @@ export async function getWorkspaceLeaks({
 
   if (username && username !== 'all') {
     where.username = username;
+  }
+
+  if (params.sessionId) {
+    where.sessionId = params.sessionId;
   }
 
   try {
