@@ -13,5 +13,5 @@ export async function deleteWorkspace(workspaceId: string) {
     throw new Error('Failed to delete workspace');
   }
 
-  redirect('/dashboard');
+  redirect('/dashboard/workspaces');
 }

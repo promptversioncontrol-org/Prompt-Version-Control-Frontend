@@ -59,6 +59,7 @@ export function WorkspaceGeneralSettings({
 }: WorkspaceGeneralSettingsProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [formData, setFormData] = useState({
     name: workspace.name || '',
     description: workspace.description || '',
@@ -251,7 +252,12 @@ export function WorkspaceGeneralSettings({
             </p>
           </div>
 
-          <AlertDialog>
+          <AlertDialog
+            open={isDeleting ? true : undefined}
+            onOpenChange={(open) => {
+              if (!open && !isDeleting) setDeleteConfirmation('');
+            }}
+          >
             <AlertDialogTrigger asChild>
               <Button
                 variant="destructive"
@@ -270,28 +276,46 @@ export function WorkspaceGeneralSettings({
                   Delete Workspace?
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-center text-zinc-400">
-                  You are about to delete <strong>{workspace.name}</strong>.
-                  This action is irreversible.
-                  <br />
-                  Please type the workspace name to confirm.
+                  This action cannot be undone. This will permanently delete the
+                  workspace <strong>{workspace.name}</strong> and remove all
+                  associated data.
                 </AlertDialogDescription>
               </AlertDialogHeader>
 
-              {/* Optional: Add an input here for confirmation logic if desired */}
+              <div className="py-4 space-y-3">
+                <Label className="text-zinc-400 text-xs uppercase tracking-wider font-semibold">
+                  Type{' '}
+                  <span className="text-red-400 user-select-all">
+                    permanently delete
+                  </span>{' '}
+                  to confirm
+                </Label>
+                <Input
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  placeholder="permanently delete"
+                  className="bg-zinc-900 border-zinc-800 text-white focus:border-red-500/50 focus:ring-red-500/20"
+                />
+              </div>
 
-              <AlertDialogFooter className="sm:justify-center mt-4">
-                <AlertDialogCancel className="bg-transparent border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900">
+              <AlertDialogFooter className="sm:justify-center mt-2">
+                <AlertDialogCancel
+                  onClick={() => setDeleteConfirmation('')}
+                  className="bg-transparent border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900"
+                >
                   Cancel
                 </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="bg-red-600 hover:bg-red-700 text-white border-0"
+                  disabled={
+                    deleteConfirmation !== 'permanently delete' || isDeleting
+                  }
+                  className="bg-red-600 hover:bg-red-700 text-white border-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isDeleting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    'Yes, Delete Everything'
+                    'Delete Workspace'
                   )}
                 </AlertDialogAction>
               </AlertDialogFooter>

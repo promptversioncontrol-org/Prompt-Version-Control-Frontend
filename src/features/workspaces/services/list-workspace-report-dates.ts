@@ -1,27 +1,39 @@
 import { ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { s3Client } from '@/shared/lib/s3-client';
 
-export async function listWorkspaceReportDates(workspaceId: string) {
+export async function listWorkspaceReportDates(
+  workspaceId: string,
+  userId: string,
+) {
   const bucket = process.env.AWS_BUCKET_NAME;
 
   if (!bucket) {
     throw new Error('Missing bucket name');
   }
 
-  const basePrefix = `pvc/workspaces/${workspaceId}/`;
+  // Old structure: pvc/workspaces/{workspaceId}/
+  // New structure: pvc/workspaces/{workspaceId}/{userId}/
+  const basePrefix = `pvc/workspaces/${workspaceId}/${userId}/`;
 
-  const listResponse = await s3Client.send(
-    new ListObjectsV2Command({
-      Bucket: bucket,
-      Prefix: basePrefix,
-      Delimiter: '/',
-    }),
-  );
+  console.log(`📂 Listing dates from: ${basePrefix}`);
 
-  const dates =
-    listResponse.CommonPrefixes?.map((prefix) =>
-      prefix.Prefix?.slice(basePrefix.length).replace(/\/$/, ''),
-    ).filter(Boolean) ?? [];
+  try {
+    const listResponse = await s3Client.send(
+      new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: basePrefix,
+        Delimiter: '/',
+      }),
+    );
 
-  return dates;
+    const dates =
+      listResponse.CommonPrefixes?.map((prefix) =>
+        prefix.Prefix?.slice(basePrefix.length).replace(/\/$/, ''),
+      ).filter(Boolean) ?? [];
+
+    return dates;
+  } catch (error) {
+    console.error('Error listing dates:', error);
+    return [];
+  }
 }
