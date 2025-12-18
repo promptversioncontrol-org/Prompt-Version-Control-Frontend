@@ -278,7 +278,10 @@ export function WorkspaceContributorsSettings({
                   className="flex items-center justify-between py-4 group"
                 >
                   <div className="flex items-center gap-4">
-                    <Avatar className="h-10 w-10 border border-zinc-800 shadow-sm">
+                    <Avatar
+                      className="h-10 w-10 border border-zinc-800 shadow-sm"
+                      withSantaHat
+                    >
                       <AvatarImage src={contributor.user.image || undefined} />
                       <AvatarFallback className="bg-zinc-900 text-zinc-400 font-medium">
                         {contributor.user.username?.slice(0, 2).toUpperCase() ||

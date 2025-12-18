@@ -30,8 +30,14 @@ model User {
   twoFactorEnabled Boolean?               @default(false)
   twoFactor        TwoFactor?
 
+  plan               String  @default("free")
+  stripeCustomerId   String?
+  subscriptionStatus String?
+
   telegramTokens TelegramToken[]
   userTelegrams  UserTelegram[]
+
+  passkeys Passkey[]
 
   receivedInvitations WorkspaceInvitation[] @relation("ReceivedInvitations")
   sentInvitations     WorkspaceInvitation[] @relation("SentInvitations")
@@ -154,7 +160,7 @@ model Workspace {
 model WorkspaceInvitation {
   id        String   @id @default(cuid())
   token     String   @unique
-  status    String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  status    String   @default("PENDING")
   role      String   @default("member")
   createdAt DateTime @default(now())
   expiresAt DateTime
@@ -176,7 +182,7 @@ model WorkspaceLeak {
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  severity String // low, medium, high
+  severity String
   message  String
   snippet  String?
   source   String
@@ -193,8 +199,8 @@ model WorkspaceLeak {
 
 model SecurityRule {
   id          String   @id @default(cuid())
-  pattern     String // e.g. "node_modules", "*.env"
-  category    String? // "Folders", "Files"
+  pattern     String
+  category    String?
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -223,15 +229,18 @@ model UserTelegram {
 }
 
 model Organization {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String?
-  image       String?
-  website     String?
-  industry    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  name               String
+  slug               String   @unique
+  description        String?
+  image              String?
+  website            String?
+  industry           String?
+  plan               String   @default("free")
+  stripeCustomerId   String?
+  subscriptionStatus String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   members           OrganizationMember[]
   workspaces        Workspace[]
@@ -296,4 +305,30 @@ model OrganizationRole {
 
   @@unique([organizationId, name])
   @@map("organization_role")
+}
+
+model Passkey {
+  id String @id
+
+  name String?
+
+  publicKey String
+
+  userId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  webauthnUserID String
+
+  counter Int
+
+  deviceType String
+
+  backedUp Boolean
+
+  transports String?
+
+  createdAt DateTime?
+
+  @@map("passkey")
 }

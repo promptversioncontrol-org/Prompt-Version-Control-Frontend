@@ -77,7 +77,10 @@ export function MemberListItem({
     <div className="p-6 flex flex-col md:flex-row items-center justify-between gap-6 hover:bg-white/[0.02] transition-colors">
       {/* User Info */}
       <div className="flex items-center gap-4 flex-1 w-full min-w-0">
-        <Avatar className="h-10 w-10 border border-zinc-700 shadow-sm">
+        <Avatar
+          className="h-10 w-10 border border-zinc-700 shadow-sm"
+          withSantaHat
+        >
           <AvatarImage src={member.user.image || undefined} />
           <AvatarFallback className="bg-zinc-800 text-zinc-300">
             {(member.user.name?.[0] || 'U').toUpperCase()}

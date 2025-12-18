@@ -78,7 +78,10 @@ export function WorkspaceUsersList({
                   href={`/dashboard/workspaces/${workspaceSlug}/${item.user.username || item.user.id}`}
                   className="flex items-center gap-3 group"
                 >
-                  <Avatar className="h-9 w-9 border border-zinc-800">
+                  <Avatar
+                    className="h-9 w-9 border border-zinc-800"
+                    withSantaHat
+                  >
                     <AvatarImage src={item.user.image || undefined} />
                     <AvatarFallback className="bg-zinc-800 text-zinc-400">
                       {item.user.name.slice(0, 2).toUpperCase()}
