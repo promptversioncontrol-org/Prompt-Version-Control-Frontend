@@ -6,5 +6,5 @@ import { redirect } from 'next/navigation';
 
 export async function createOrganizationAction(data: CreateOrganizationInput) {
   const org = await createOrganization(data);
-  redirect(`/organizations/${org.slug}/workspaces`);
+  redirect(`/dashboard/organizations/${org.slug}/workspaces`);
 }
