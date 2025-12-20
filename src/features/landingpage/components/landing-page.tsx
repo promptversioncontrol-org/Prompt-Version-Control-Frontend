@@ -45,6 +45,9 @@ export const LandingPage = () => {
           </div>
 
           <div className="hidden md:flex gap-8 text-sm font-medium text-gray-400">
+            <Link href="/docs" className="hover:text-white transition-colors">
+              Docs
+            </Link>
             <a href="#features" className="hover:text-white transition-colors">
               Features
             </a>
