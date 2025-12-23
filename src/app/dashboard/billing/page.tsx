@@ -17,6 +17,7 @@ export default async function Page() {
   let userPlan = PlanType.FREE;
   let subscriptionStatus: string | undefined = undefined;
   let stripeCustomerId: string | undefined = undefined;
+  let currentPeriodEnd: Date | undefined = undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const organizations: any[] = [];
 
@@ -24,6 +25,7 @@ export default async function Page() {
     plan?: PlanType;
     subscriptionStatus?: string;
     stripeCustomerId?: string;
+    currentPeriodEnd?: Date;
   }
 
   try {
@@ -37,15 +39,39 @@ export default async function Page() {
         plan: true,
         subscriptionStatus: true,
         stripeCustomerId: true,
+        currentPeriodEnd: true,
       },
     });
 
     if (user) {
       const u = user as unknown as UserWithBilling;
-      if (u.plan) userPlan = u.plan;
-      // Pass other details if needed, but primarily we need subscriptionStatus
-      subscriptionStatus = u.subscriptionStatus;
-      stripeCustomerId = u.stripeCustomerId;
+
+      // Lazy Expiration Check
+      if (
+        u.plan === PlanType.PREMIUM &&
+        u.currentPeriodEnd &&
+        new Date(u.currentPeriodEnd) < new Date()
+      ) {
+        console.log(
+          `[Billing] User ${session.user.id} subscription expired. Downgrading to FREE.`,
+        );
+        await prisma.user.update({
+          where: { id: session.user.id },
+          data: {
+            plan: PlanType.FREE,
+            subscriptionStatus: null,
+            currentPeriodEnd: null,
+          },
+        });
+        userPlan = PlanType.FREE;
+        subscriptionStatus = undefined;
+        currentPeriodEnd = undefined;
+      } else {
+        if (u.plan) userPlan = u.plan;
+        subscriptionStatus = u.subscriptionStatus;
+        stripeCustomerId = u.stripeCustomerId;
+        currentPeriodEnd = u.currentPeriodEnd;
+      }
     }
 
     // ... organizations ...
@@ -61,7 +87,7 @@ export default async function Page() {
     <BillingPage
       userPlan={userPlan}
       subscriptionStatus={subscriptionStatus}
-      stripeCustomerId={stripeCustomerId}
+      currentPeriodEnd={currentPeriodEnd}
       organizations={organizations}
     />
   );

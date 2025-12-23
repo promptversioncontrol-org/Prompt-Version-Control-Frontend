@@ -16,7 +16,6 @@ import {
   ListFilter,
   CodeXml,
   ShieldCheck,
-  ArrowLeft,
 } from 'lucide-react';
 import { getFileContent } from '../actions/get-file-content';
 import { getWorkspaceLeaks } from '../actions/get-workspace-leaks';
@@ -141,19 +140,19 @@ function truncate(str: string, n: number) {
 }
 
 import { SessionFindings } from './report-viewer/session-findings';
-import { useRouter } from 'next/navigation'; // Add router
-import { getUserFiles, type FileBrowserItem } from '../actions/get-user-files'; // ... (existing imports)
+
+// ... (existing imports)
 
 export default function ReportViewer({
   initialFileKey,
   workspaceSlug,
-  username,
 }: {
   initialFileKey?: string;
   workspaceSlug?: string;
   username?: string;
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const [sourceKey, setSourceKey] = useState(initialFileKey ?? '');
   const [rawJson, setRawJson] = useState<unknown | null>(null);
   const [findingsJson, setFindingsJson] = useState<unknown | null>(null);
@@ -161,45 +160,6 @@ export default function ReportViewer({
   const [selectedSessionId, setSelectedSessionId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [siblingSessions, setSiblingSessions] = useState<FileBrowserItem[]>([]); // New state
-  const router = useRouter();
-
-  // Fetch sibling sessions (other folders in the same date directory)
-  useEffect(() => {
-    async function fetchSiblings() {
-      if (!initialFileKey) return;
-
-      // Key format: pvc/workspaces/{wid}/{uid}/{date}/{sessionId}/report.json
-      const parts = initialFileKey.split('/');
-      // Expecting at least 7 parts
-      if (parts.length < 7 || parts[parts.length - 1] !== 'report.json') return;
-
-      const workspaceId = parts[2];
-      const userId = parts[3];
-      const date = parts[4];
-
-      // Prefix for listing sessions in that date: pvc/workspaces/{wid}/{uid}/{date}/
-      // Note: getUserFiles appends prefix to root path (pvc/workspaces/{wid}/{uid}/)
-      // So we just need to pass "{date}/" as prefix.
-      const prefix = `${date}/`;
-
-      try {
-        const res = await getUserFiles({ workspaceId, userId, prefix });
-        if (res.success && res.items) {
-          // Filter for folders (these are the sessions)
-          const folders = res.items.filter((item) => item.type === 'folder');
-          // Sort by name (which acts as timestamp usually) or created date?
-          // Folders might not have latModified in some S3 listings, but let's assume filtering is enough.
-          // Reverse sort so newest is first implies default
-          folders.sort((a, b) => b.name.localeCompare(a.name));
-          setSiblingSessions(folders);
-        }
-      } catch (err) {
-        console.error('Failed to fetch sibling sessions:', err);
-      }
-    }
-    fetchSiblings();
-  }, [initialFileKey]);
 
   const sessions = useMemo(() => report?.updates ?? [], [report]);
   const selectedSession = useMemo(() => {
@@ -301,25 +261,6 @@ export default function ReportViewer({
       </div>
 
       <div className="container max-w-7xl mx-auto py-8 px-6 relative z-10 space-y-8">
-        {/* Back Button */}
-        <div>
-          <Button
-            variant="ghost"
-            className="text-zinc-400 hover:text-white pl-0 gap-2 hover:bg-transparent"
-            onClick={() => {
-              // If workspaceSlug is available, go to dashboard
-              if (workspaceSlug) {
-                router.push(`/dashboard/workspaces/${workspaceSlug}`);
-              } else {
-                router.back();
-              }
-            }}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Workspace
-          </Button>
-        </div>
-
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
           <div className="space-y-2">
@@ -431,56 +372,22 @@ export default function ReportViewer({
                   Active Session:
                 </span>
                 <Select
-                  value={selectedSessionId}
-                  onValueChange={(val) => {
-                    // Check if this value is in siblingSessions
-                    const isSibling = siblingSessions.find(
-                      (s) => s.name === val,
-                    );
-                    if (isSibling && initialFileKey) {
-                      // Construct new key
-                      // Old: .../{date}/{oldSessionId}/report.json
-                      // New: .../{date}/{val}/report.json
-                      const parts = initialFileKey.split('/');
-                      if (parts.length >= 7) {
-                        parts[5] = val; // Replace session ID
-                        const newKey = parts.join('/');
-                        // Navigate to new key
-                        const newUrl = new URL(window.location.href);
-                        newUrl.searchParams.set('key', newKey);
-                        router.push(newUrl.pathname + newUrl.search);
-                        return;
-                      }
-                    }
-                    // Fallback for internal switching (legacy)
-                    setSelectedSessionId(val);
-                  }}
+                  value={selectedSession?.sessionId ?? ''}
+                  onValueChange={(v) => setSelectedSessionId(v)}
                 >
                   <SelectTrigger className="w-[320px] bg-zinc-950/80 border-zinc-800 text-zinc-200 font-mono h-9">
                     <SelectValue placeholder="Select session" />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-zinc-800">
-                    {/* If we have sibling sessions from S3, show them */}
-                    {siblingSessions.length > 0
-                      ? siblingSessions.map((s) => (
-                          <SelectItem
-                            key={s.id}
-                            value={s.name}
-                            className="font-mono text-xs text-zinc-300 focus:bg-zinc-800 focus:text-white data-[state=checked]:text-emerald-400 data-[state=checked]:bg-emerald-500/10 cursor-pointer"
-                          >
-                            {truncate(s.name, 48)}
-                          </SelectItem>
-                        ))
-                      : // Fallback to internal sessions from report.json (legacy/single file mode)
-                        sessions.map((s, idx) => (
-                          <SelectItem
-                            key={`${s.sessionId}-${idx}`}
-                            value={s.sessionId}
-                            className="font-mono text-xs text-zinc-300 focus:bg-zinc-800 focus:text-white data-[state=checked]:text-emerald-400 data-[state=checked]:bg-emerald-500/10 cursor-pointer"
-                          >
-                            {truncate(s.sessionId, 48)}
-                          </SelectItem>
-                        ))}
+                    {sessions.map((s, idx) => (
+                      <SelectItem
+                        key={`${s.sessionId}-${idx}`}
+                        value={s.sessionId}
+                        className="font-mono text-xs focus:bg-zinc-800 focus:text-white data-[state=checked]:text-emerald-400 data-[state=checked]:bg-emerald-500/10 cursor-pointer"
+                      >
+                        {truncate(s.sessionId, 48)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

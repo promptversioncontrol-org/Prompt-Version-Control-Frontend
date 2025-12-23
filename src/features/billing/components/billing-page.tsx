@@ -19,12 +19,28 @@ import {
   ShieldCheck,
   CheckCircle2,
   Zap,
+  Loader2,
+  AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/shared/lib/utils';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/shared/components/ui/alert-dialog';
 import { createCheckoutSession } from '../actions/create-checkout';
+import { cancelSubscription } from '../actions/cancel-subscription';
+import { resumeSubscription } from '../actions/resume-subscription';
 
 interface OrganizationPlanInfo {
   id: string;
@@ -35,13 +51,14 @@ interface OrganizationPlanInfo {
 interface BillingPageProps {
   userPlan: PlanType;
   subscriptionStatus?: string;
-  stripeCustomerId?: string;
+  currentPeriodEnd?: Date;
   organizations: OrganizationPlanInfo[];
 }
 
 export function BillingPage({
   userPlan,
   subscriptionStatus,
+  currentPeriodEnd,
   organizations,
 }: BillingPageProps) {
   const [activeTab, setActiveTab] = useState<'personal' | 'organization'>(
@@ -52,50 +69,64 @@ export function BillingPage({
   );
   const [isLoading, setIsLoading] = useState(false);
 
-  // Derive current status
+  // Cancel Dialog State
+  const [cancelConfirmation, setCancelConfirmation] = useState('');
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+
   const currentOrg = organizations.find((o) => o.id === selectedOrgId);
   const isOrgTab = activeTab === 'organization';
   const currentPlanType = isOrgTab
     ? currentOrg?.plan || PlanType.FREE
     : userPlan;
-
-  // Check if personal premium is active
   const isPersonalPremium = !isOrgTab && userPlan === PlanType.PREMIUM;
-  // const isActiveSubscription = isPersonalPremium && subscriptionStatus === 'active';
 
   const handleUpgrade = async (planId: string) => {
     setIsLoading(true);
     const loadingToast = toast.loading('Redirecting to checkout...');
 
     try {
-      // Assuming 'personal' tab for now.
-      // If org tab, we would need to pass orgId (which we have in selectedOrgId)
       const targetOrgId = isOrgTab ? selectedOrgId : undefined;
-
-      // Get priceId from plan config (we need to ensure it exists or handle it)
       const plan = BILLING_PLANS[planId as PlanType];
-      if (!plan.priceId) {
-        throw new Error('This plan is not available for online purchase.');
-      }
-
+      if (!plan.priceId) throw new Error('Plan not available for purchase.');
       await createCheckoutSession(plan.priceId, targetOrgId);
     } catch (e: unknown) {
       console.error(e);
-      const message =
-        e instanceof Error ? e.message : 'Failed to start checkout';
-      toast.error(message);
+      toast.error(e instanceof Error ? e.message : 'Failed to start checkout');
       setIsLoading(false);
       toast.dismiss(loadingToast);
     }
   };
 
-  const handleManageSubscription = () => {
-    // Ideally redirect to Stripe Customer Portal
-    toast.info('Manage Subscription Portal coming soon!');
+  const handleCancelSubscription = async () => {
+    setIsLoading(true);
+    try {
+      await cancelSubscription();
+      toast.success('Subscription cancelled. Access remains until period end.');
+      setIsCancelDialogOpen(false);
+    } catch (e) {
+      toast.error('Failed to cancel subscription');
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+      setCancelConfirmation('');
+    }
+  };
+
+  const handleResumeSubscription = async () => {
+    setIsLoading(true);
+    try {
+      await resumeSubscription();
+      toast.success('Subscription resumed successfully!');
+    } catch (e) {
+      toast.error('Failed to resume subscription');
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen w-full pb-20">
+    <div className="min-h-screen w-full pb-20 bg-black">
       {/* Ambient Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[400px] bg-blue-900/10 blur-[120px] pointer-events-none" />
 
@@ -106,8 +137,7 @@ export function BillingPage({
             Billing & Plans
           </h1>
           <p className="text-zinc-400 text-lg max-w-2xl">
-            Manage your subscription, view usage, and upgrade your plan to
-            unlock more features.
+            Manage your subscription, view usage, and upgrade your plan.
           </p>
         </div>
 
@@ -123,19 +153,17 @@ export function BillingPage({
                 value="personal"
                 className="h-10 px-6 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-zinc-400 transition-all"
               >
-                <User className="w-4 h-4 mr-2" />
-                Personal Account
+                <User className="w-4 h-4 mr-2" /> Personal Account
               </TabsTrigger>
               <TabsTrigger
                 value="organization"
                 className="h-10 px-6 data-[state=active]:bg-zinc-800 data-[state=active]:text-white text-zinc-400 transition-all"
               >
-                <Building2 className="w-4 h-4 mr-2" />
-                Organization
+                <Building2 className="w-4 h-4 mr-2" /> Organization
               </TabsTrigger>
             </TabsList>
 
-            {/* Organization Switcher (Only visible in Org Tab) */}
+            {/* Org Switcher */}
             <AnimatePresence mode="wait">
               {isOrgTab && organizations.length > 0 && (
                 <motion.div
@@ -167,7 +195,7 @@ export function BillingPage({
           </div>
 
           <div className="space-y-10">
-            {/* Current Plan Overview Card */}
+            {/* Current Plan Overview */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -175,7 +203,6 @@ export function BillingPage({
               className="grid gap-6 md:grid-cols-3"
             >
               <Card className="col-span-2 relative overflow-hidden bg-zinc-950 border-zinc-800 group">
-                {/* Glow Effect */}
                 <div
                   className={cn(
                     'absolute top-0 right-0 w-[300px] h-[300px] blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-700',
@@ -189,8 +216,8 @@ export function BillingPage({
                   <div className="flex justify-between items-start">
                     <div className="space-y-1">
                       <CardTitle className="text-zinc-100 flex items-center gap-2 text-lg">
-                        <CreditCard className="w-5 h-5 text-zinc-400" />
-                        Current Subscription
+                        <CreditCard className="w-5 h-5 text-zinc-400" /> Current
+                        Subscription
                       </CardTitle>
                       <CardDescription className="text-zinc-500">
                         {isOrgTab
@@ -217,19 +244,56 @@ export function BillingPage({
                       <div className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-2">
                         {BILLING_PLANS[currentPlanType].name}
                       </div>
-                      <div className="text-sm text-zinc-400 flex items-center gap-2">
+                      <div className="text-sm text-zinc-400 flex flex-col gap-1">
                         {currentPlanType === PlanType.FREE ? (
                           <span>Upgrade to unlock premium features</span>
                         ) : (
                           <>
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                            <span>
-                              Status:{' '}
-                              <span className="text-white capitalize">
-                                {subscriptionStatus || 'Active'}
-                              </span>
-                            </span>
-                            {/* We could calculate renewal date here if we passed it */}
+                            {subscriptionStatus === 'canceled' ? (
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2 text-amber-500">
+                                  <AlertTriangle className="w-4 h-4" />
+                                  <span className="font-medium">
+                                    Subscription Canceled
+                                  </span>
+                                </div>
+                                {currentPeriodEnd && (
+                                  <div className="text-xs text-zinc-400 ml-6">
+                                    Access remains until:{' '}
+                                    <span className="text-zinc-200">
+                                      {currentPeriodEnd.toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                  <span>
+                                    Status:{' '}
+                                    <span
+                                      className={cn(
+                                        'capitalize',
+                                        subscriptionStatus === 'active'
+                                          ? 'text-white'
+                                          : 'text-zinc-300',
+                                      )}
+                                    >
+                                      {subscriptionStatus || 'Active'}
+                                    </span>
+                                  </span>
+                                </div>
+                                {currentPeriodEnd && (
+                                  <div className="text-zinc-500 text-xs ml-6">
+                                    Next billing:{' '}
+                                    <span className="text-zinc-300">
+                                      {currentPeriodEnd.toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                )}
+                              </>
+                            )}
                           </>
                         )}
                       </div>
@@ -246,19 +310,94 @@ export function BillingPage({
                       >
                         Upgrade Now
                       </Button>
-                    ) : (
+                    ) : subscriptionStatus === 'canceled' ? (
                       <Button
-                        variant="outline"
-                        onClick={handleManageSubscription}
-                        className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                        onClick={handleResumeSubscription}
+                        disabled={isLoading}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white border-0"
                       >
-                        Manage Subscription
+                        {isLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          'Resume Subscription'
+                        )}
                       </Button>
+                    ) : (
+                      <AlertDialog
+                        open={isCancelDialogOpen}
+                        onOpenChange={setIsCancelDialogOpen}
+                      >
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            disabled={
+                              isLoading || subscriptionStatus === 'canceled'
+                            }
+                            className="border-zinc-700 hover:bg-red-900/50 hover:text-red-200 bg-transparent text-zinc-400 border"
+                          >
+                            {subscriptionStatus === 'canceled'
+                              ? 'Cancellation Scheduled'
+                              : 'Cancel Subscription'}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-zinc-950 border-zinc-800">
+                          <AlertDialogHeader>
+                            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 mb-4 mx-auto">
+                              <AlertTriangle className="h-6 w-6 text-red-500" />
+                            </div>
+                            <AlertDialogTitle className="text-center text-white">
+                              Cancel Subscription?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="text-center text-zinc-400">
+                              This action will cancel your subscription at the
+                              end of the current billing period. You will lose
+                              access to premium features after that date.
+                              <br />
+                              <br />
+                              To confirm, type{' '}
+                              <strong>cancel subscription</strong> below:
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+
+                          <div className="py-4">
+                            <Input
+                              placeholder="cancel subscription"
+                              value={cancelConfirmation}
+                              onChange={(e) =>
+                                setCancelConfirmation(e.target.value)
+                              }
+                              className="bg-zinc-900 border-zinc-700 text-center text-white focus:border-red-500/50 focus:ring-red-500/20"
+                            />
+                          </div>
+
+                          <AlertDialogFooter className="sm:justify-center gap-2">
+                            <AlertDialogCancel className="bg-transparent border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900">
+                              Nevermind
+                            </AlertDialogCancel>
+                            <Button
+                              variant="destructive"
+                              onClick={handleCancelSubscription}
+                              disabled={
+                                cancelConfirmation.toLowerCase() !==
+                                  'cancel subscription' || isLoading
+                              }
+                              className="bg-red-600 hover:bg-red-700 text-white border-0 min-w-[140px]"
+                            >
+                              {isLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                'Confirm Cancellation'
+                              )}
+                            </Button>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     )}
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Secure Payment Card (Keep existing) */}
               <Card className="bg-zinc-900/30 border-zinc-800 flex flex-col items-center justify-center text-center p-6 relative overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-800/20 via-zinc-950/0 to-zinc-950/0" />
                 <div className="relative z-10">
@@ -269,19 +408,13 @@ export function BillingPage({
                     Secure Payment
                   </h3>
                   <p className="text-sm text-zinc-500 mb-4 max-w-[200px] mx-auto">
-                    All transactions are encrypted and secured by Stripe.
+                    Encrypted and secured by Stripe.
                   </p>
-                  <Button
-                    variant="link"
-                    className="text-zinc-400 hover:text-white h-auto p-0 text-xs"
-                  >
-                    Manage Payment Methods &rarr;
-                  </Button>
                 </div>
               </Card>
             </motion.div>
 
-            {/* Pricing Grid - Conditional Rendering */}
+            {/* Pricing Grid */}
             {(!isPersonalPremium || isOrgTab) && (
               <div id="pricing-grid" className="space-y-6">
                 <div className="flex items-center gap-2">
@@ -290,7 +423,6 @@ export function BillingPage({
                     Available Plans
                   </h2>
                 </div>
-
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <PricingCard
                     plan={BILLING_PLANS[PlanType.FREE]}
@@ -299,7 +431,6 @@ export function BillingPage({
                     isLoading={isLoading}
                     index={0}
                   />
-
                   {isOrgTab ? (
                     <PricingCard
                       plan={BILLING_PLANS[PlanType.ENTERPRISE]}
@@ -315,24 +446,26 @@ export function BillingPage({
                       onUpgrade={handleUpgrade}
                       isLoading={isLoading}
                       index={1}
-                      // Hide button if current or show "Current Plan"
                     />
                   )}
                 </div>
               </div>
             )}
 
-            {/* If Premium, show feature summary or usage instead of pricing grid? optional */}
             {isPersonalPremium && (
-              <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-6">
-                <h3 className="text-emerald-400 font-semibold mb-2 flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5" />
-                  You have full access!
-                </h3>
-                <p className="text-zinc-400 text-sm">
-                  You are currently exploring the full capabilities of Prompt
-                  Version Control.
-                </p>
+              <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-6 flex items-start gap-4">
+                <div className="p-2 bg-emerald-500/10 rounded-lg">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                </div>
+                <div>
+                  <h3 className="text-emerald-400 font-semibold mb-1">
+                    You have full access!
+                  </h3>
+                  <p className="text-zinc-400 text-sm">
+                    You are currently exploring the full capabilities of Prompt
+                    Version Control.
+                  </p>
+                </div>
               </div>
             )}
           </div>
