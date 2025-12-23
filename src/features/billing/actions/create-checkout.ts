@@ -117,7 +117,7 @@ export async function createCheckoutSession(priceId: string, orgId?: string) {
         quantity: 1,
       },
     ],
-    success_url: `${baseUrl}/dashboard/billing?success=true&session_id={CHECKOUT_SESSION_ID}`,
+    success_url: `${baseUrl}/dashboard/billing/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${baseUrl}/dashboard/billing/cancel`,
     metadata: {
       userId: user.id,

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,39 +8,36 @@ datasource db {
 }
 
 model User {
-  id               String                 @id
-  name             String
-  email            String
-  emailVerified    Boolean                @default(false)
-  image            String?
-  username         String?                @unique
-  createdAt        DateTime               @default(now())
-  updatedAt        DateTime               @default(now()) @updatedAt
-  sessions         Session[]
-  accounts         Account[]
-  sshKeys          SshKey[]
-  workspacesOwned  Workspace[]
-  contributions    WorkspaceContributor[]
-  twoFactorEnabled Boolean?               @default(false)
-  twoFactor        TwoFactor?
-
-  plan               String  @default("free")
-  stripeCustomerId   String?
-  subscriptionStatus String?
-
-  telegramTokens TelegramToken[]
-  userTelegrams  UserTelegram[]
-
-  passkeys Passkey[]
-
-  receivedInvitations WorkspaceInvitation[] @relation("ReceivedInvitations")
-  sentInvitations     WorkspaceInvitation[] @relation("SentInvitations")
-
-  organizationMemberships OrganizationMember[]
-  sentOrgInvitations      OrganizationInvitation[] @relation("SentOrganizationInvitations")
+  id                      String                   @id
+  name                    String
+  email                   String                   @unique
+  emailVerified           Boolean                  @default(false)
+  image                   String?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @default(now()) @updatedAt
+  username                String?                  @unique
+  twoFactorEnabled        Boolean?                 @default(false)
+  plan                    String                   @default("free")
+  stripeCustomerId        String?
+  subscriptionStatus      String?
+  currentPeriodEnd        DateTime?
+  description             String?
+  links                   Json?
+  telegramTokens          TelegramToken[]
+  userTelegrams           UserTelegram?
+  contributions           WorkspaceContributor[]
+  accounts                Account[]
   receivedOrgInvitations  OrganizationInvitation[] @relation("ReceivedOrganizationInvitations")
+  sentOrgInvitations      OrganizationInvitation[] @relation("SentOrganizationInvitations")
+  organizationMemberships OrganizationMember[]
+  passkeys                Passkey[]
+  sessions                Session[]
+  sshKeys                 SshKey[]
+  twoFactor               TwoFactor?
+  workspacesOwned         Workspace[]
+  receivedInvitations     WorkspaceInvitation[]    @relation("ReceivedInvitations")
+  sentInvitations         WorkspaceInvitation[]    @relation("SentInvitations")
 
-  @@unique([email])
   @@map("user")
 }
 
@@ -54,17 +45,16 @@ model TwoFactor {
   id          String @id
   secret      String
   backupCodes String
-  userId      String
+  userId      String @unique
   user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId])
   @@map("two_factor")
 }
 
 model Session {
   id        String   @id
   expiresAt DateTime
-  token     String
+  token     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   ipAddress String?
@@ -72,7 +62,6 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@map("session")
 }
 
@@ -81,7 +70,6 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -91,6 +79,7 @@ model Account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
 }
@@ -112,65 +101,57 @@ model SshKey {
   publicKey   String
   fingerprint String   @unique
   createdAt   DateTime @default(now())
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("ssh_key")
 }
 
 model WorkspaceContributor {
-  id      String   @id @default(cuid())
-  role    String   @default("member") // owner, co-owner, moderator, member
-  addedAt DateTime @default(now())
-
+  id          String    @id @default(cuid())
+  role        String    @default("member")
+  addedAt     DateTime  @default(now())
   workspaceId String
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([workspaceId, userId])
 }
 
 model Workspace {
-  id          String   @id @default(cuid())
-  name        String?
-  slug        String   @default("workspace")
-  createdAt   DateTime @default(now())
-  description String?
-
-  userId        String
-  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  contributors  WorkspaceContributor[]
-  securityRules SecurityRule[]
-
-  invitations WorkspaceInvitation[]
-  leaks       WorkspaceLeak[]
-
+  id             String                 @id @default(cuid())
+  name           String?
+  slug           String                 @default("workspace")
+  createdAt      DateTime               @default(now())
+  description    String?
+  userId         String
+  image          String?
   organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contributors   WorkspaceContributor[]
+  securityRules  SecurityRule[]
+  organization   Organization?          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invitations    WorkspaceInvitation[]
+  leaks          WorkspaceLeak[]
 
   @@unique([userId, slug])
   @@map("workspace")
 }
 
 model WorkspaceInvitation {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  status    String   @default("PENDING")
-  role      String   @default("member")
-  createdAt DateTime @default(now())
-  expiresAt DateTime
-
+  id          String    @id @default(cuid())
+  token       String    @unique
+  status      String    @default("PENDING")
+  role        String    @default("member")
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
   workspaceId String
+  inviteeId   String
+  inviterId   String
+  invitee     User      @relation("ReceivedInvitations", fields: [inviteeId], references: [id], onDelete: Cascade)
+  inviter     User      @relation("SentInvitations", fields: [inviterId], references: [id], onDelete: Cascade)
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  inviteeId String
-  invitee   User   @relation("ReceivedInvitations", fields: [inviteeId], references: [id], onDelete: Cascade)
-
-  inviterId String
-  inviter   User   @relation("SentInvitations", fields: [inviterId], references: [id], onDelete: Cascade)
 
   @@map("workspace_invitation")
 }
@@ -178,31 +159,27 @@ model WorkspaceInvitation {
 model WorkspaceLeak {
   id          String    @id @default(cuid())
   workspaceId String
+  severity    String
+  message     String
+  snippet     String?
+  source      String
+  username    String?
+  ruleId      String?
+  sessionId   String?
+  detectedAt  DateTime  @default(now())
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  severity String
-  message  String
-  snippet  String?
-  source   String
-  username String?
-
-  ruleId    String?
-  sessionId String?
-
-  detectedAt DateTime @default(now())
 
   @@index([workspaceId])
   @@map("workspace_leak")
 }
 
 model SecurityRule {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   pattern     String
   category    String?
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
@@ -213,120 +190,102 @@ model TelegramToken {
   id        String   @id @default(cuid())
   token     String   @unique
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserTelegram {
   id        String   @id @default(cuid())
   chatId    String   @unique
   userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Organization {
-  id                 String   @id @default(cuid())
+  id                 String                   @id @default(cuid())
   name               String
-  slug               String   @unique
+  slug               String                   @unique
   description        String?
   image              String?
   website            String?
   industry           String?
-  plan               String   @default("free")
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  plan               String                   @default("free")
   stripeCustomerId   String?
   subscriptionStatus String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  members           OrganizationMember[]
-  workspaces        Workspace[]
-  invitations       OrganizationInvitation[]
-  organizationRoles OrganizationRole[]
+  invitations        OrganizationInvitation[]
+  members            OrganizationMember[]
+  organizationRoles  OrganizationRole[]
+  workspaces         Workspace[]
 
   @@map("organization")
 }
 
 model OrganizationMember {
-  id       String   @id @default(cuid())
-  role     String   @default("member") // owner, moderator, member
-  joinedAt DateTime @default(now())
-
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
+  id                 String            @id @default(cuid())
+  role               String            @default("member")
+  joinedAt           DateTime          @default(now())
+  organizationId     String
   userId             String
-  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organizationRole   OrganizationRole? @relation(fields: [organizationRoleId], references: [id])
   organizationRoleId String?
+  organization       Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationRole   OrganizationRole? @relation(fields: [organizationRoleId], references: [id])
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, userId])
   @@map("organization_member")
 }
 
 model OrganizationInvitation {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  email     String
-  status    String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
-  role      String   @default("member")
-  createdAt DateTime @default(now())
-  expiresAt DateTime
-
+  id             String       @id @default(cuid())
+  token          String       @unique
+  email          String
+  status         String       @default("PENDING")
+  role           String       @default("member")
+  createdAt      DateTime     @default(now())
+  expiresAt      DateTime
   organizationId String
+  inviterId      String
+  inviteeId      String?
+  invitee        User?        @relation("ReceivedOrganizationInvitations", fields: [inviteeId], references: [id], onDelete: Cascade)
+  inviter        User         @relation("SentOrganizationInvitations", fields: [inviterId], references: [id], onDelete: Cascade)
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  inviterId String
-  inviter   User   @relation("SentOrganizationInvitations", fields: [inviterId], references: [id], onDelete: Cascade)
-
-  inviteeId String?
-  invitee   User?   @relation("ReceivedOrganizationInvitations", fields: [inviteeId], references: [id], onDelete: Cascade)
 
   @@index([email])
   @@map("organization_invitation")
 }
 
 model OrganizationRole {
-  id           String   @id @default(cuid())
-  name         String
-  description  String?
-  workspaceIds String[] // IDs of workspaces this role can access
-
+  id             String               @id @default(cuid())
+  name           String
+  description    String?
+  workspaceIds   String[]
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  members OrganizationMember[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  members        OrganizationMember[]
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, name])
   @@map("organization_role")
 }
 
 model Passkey {
-  id String @id
-
-  name String?
-
-  publicKey String
-
-  userId String
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  webauthnUserID String
-
-  counter Int
-
-  deviceType String
-
-  backedUp Boolean
-
-  transports String?
-
-  createdAt DateTime?
+  id           String    @id
+  name         String?
+  publicKey    String
+  userId       String
+  counter      Int
+  deviceType   String
+  backedUp     Boolean
+  transports   String?
+  createdAt    DateTime?
+  aaguid       String
+  credentialID String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("passkey")
 }

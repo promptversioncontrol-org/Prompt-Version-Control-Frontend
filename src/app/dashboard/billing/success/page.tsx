@@ -1,3 +1,5 @@
+import { prisma } from '@/shared/lib/prisma';
+import { PlanType } from '@/features/billing/contracts/billing.dto';
 import { stripe } from '@/shared/lib/stripe';
 import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
@@ -26,8 +28,30 @@ export default async function BillingSuccessPage(props: Props) {
       customerName = session.customer_details.name || 'Customer';
       customerEmail = session.customer_details.email || '';
     }
+
+    // Force DB Sync (Fallback for Webhooks)
+    if (session.payment_status === 'paid' && session.metadata?.userId) {
+      const userId = session.metadata.userId;
+      www;
+      const subscriptionId = session.subscription as string;
+
+      if (subscriptionId) {
+        const subscription =
+          await stripe.subscriptions.retrieve(subscriptionId);
+
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            plan: PlanType.PREMIUM,
+            stripeCustomerId: session.customer as string,
+            subscriptionStatus: subscription.status,
+            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          },
+        });
+      }
+    }
   } catch (error) {
-    console.error('Error retrieving session:', error);
+    console.error('Error retrieving session or syncing DB:', error);
   }
 
   return (
