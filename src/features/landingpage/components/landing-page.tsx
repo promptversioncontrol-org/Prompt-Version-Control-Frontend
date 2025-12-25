@@ -12,7 +12,12 @@ import {
   Activity,
   Layers,
   Zap,
+  Download,
+  Server,
+  ShieldCheck,
+  ChevronsDown,
 } from 'lucide-react';
+import { Button } from '@/shared/components/ui/button';
 import { motion } from 'framer-motion';
 import { ArchitectureSection } from './architecture-section';
 import { IntegrationCard } from './integration-card';
@@ -45,6 +50,9 @@ export const LandingPage = () => {
           </div>
 
           <div className="hidden md:flex gap-8 text-sm font-medium text-gray-400">
+            <Link href="/docs" className="hover:text-white transition-colors">
+              Docs
+            </Link>
             <a href="#features" className="hover:text-white transition-colors">
               Features
             </a>
@@ -117,12 +125,18 @@ export const LandingPage = () => {
           transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
           className="flex flex-col sm:flex-row justify-center gap-4 mb-16"
         >
-          <button className="px-8 py-4 bg-white text-black font-semibold rounded-lg hover:scale-105 transition-transform flex items-center justify-center gap-2">
+          <button
+            type="button"
+            className="px-8 py-4 bg-white text-black font-semibold rounded-lg hover:scale-105 transition-transform flex items-center justify-center gap-2"
+          >
             Install PVC <ArrowRight size={18} />
           </button>
-          <button className="px-8 py-4 bg-white/5 border border-white/10 text-white font-medium rounded-lg backdrop-blur-md hover:bg-white/10 transition-colors flex items-center justify-center gap-2">
+          <Link
+            href="/docs"
+            className="px-8 py-4 bg-white/5 border border-white/10 text-white font-medium rounded-lg backdrop-blur-md hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
+          >
             <Terminal size={18} /> View Documentation
-          </button>
+          </Link>
         </motion.div>
 
         {/* Hero Visual: The "Glass Prism" Dashboard Preview */}
@@ -365,6 +379,119 @@ export const LandingPage = () => {
         </div>
       </section>
 
+      {/* PVC Proxy Download Section */}
+      <section
+        id="proxy"
+        className="py-24 relative z-10 border-t border-white/10"
+      >
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-white/5 blur-[120px] rounded-full pointer-events-none"></div>
+
+        <div className="max-w-7xl mx-auto px-6 text-center space-y-8">
+          <div className="relative z-10 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-4">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              <span className="text-xs font-medium text-zinc-300">
+                Latest Release: v1.0.0
+              </span>
+            </div>
+
+            <h2 className="text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-zinc-200 to-zinc-500 drop-shadow-[0_0_25px_rgba(255,255,255,0.2)]">
+              PVC Proxy
+            </h2>
+            <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+              Secure, observable, and policy-compliant AI request handling for
+              your entire organization. Install the local proxy to gain full
+              control.
+            </p>
+          </div>
+
+          <div className="flex justify-center pt-6">
+            <a href="/downloads/PVC_Proxy_Setup_v1.0.exe" download>
+              <Button
+                size="lg"
+                className="h-14 px-8 text-base bg-white text-black hover:bg-zinc-200 shadow-[0_0_30px_-5px_rgba(255,255,255,0.4)] transition-all hover:scale-105 group"
+              >
+                <Download className="mr-2 h-5 w-5 group-hover:animate-bounce" />
+                Download Windows Installer
+              </Button>
+            </a>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-12 max-w-4xl mx-auto text-left">
+            {[
+              {
+                icon: ShieldCheck,
+                title: 'Enterprise Security',
+                desc: 'Bank-grade encryption and policy enforcement for all AI traffic.',
+              },
+              {
+                icon: Server,
+                title: 'Local Processing',
+                desc: 'Run a local proxy server that intercepts and audits prompts in real-time.',
+              },
+              {
+                icon: ChevronsDown,
+                title: 'Zero Latency',
+                desc: 'Optimized Rust-based core ensures minimal impact on request times.',
+              },
+            ].map((feature, i) => (
+              <div
+                key={i}
+                className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors"
+              >
+                <feature.icon className="h-8 w-8 text-zinc-300 mb-4" />
+                <h3 className="text-lg font-bold text-white mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  {feature.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Version History Table */}
+          <div className="max-w-4xl mx-auto mt-16 text-left">
+            <h3 className="text-xl font-bold text-white flex items-center gap-3 mb-6">
+              <Server className="w-5 h-5 text-zinc-500" />
+              Release History
+            </h3>
+
+            <div className="rounded-xl border border-white/10 bg-black/40 overflow-hidden">
+              <div className="grid grid-cols-12 gap-4 p-4 border-b border-white/10 bg-white/5 text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                <div className="col-span-3">Version</div>
+                <div className="col-span-3">Release Date</div>
+                <div className="col-span-4">Platform</div>
+                <div className="col-span-2 text-right">Action</div>
+              </div>
+
+              <div className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-white/5 transition-colors group">
+                <div className="col-span-3 font-mono text-white font-medium">
+                  v1.0.0
+                </div>
+                <div className="col-span-3 text-zinc-400">Dec 25, 2025</div>
+                <div className="col-span-4 text-zinc-400 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-500"></span>{' '}
+                  Windows (x64)
+                </div>
+                <div className="col-span-2 text-right">
+                  <a
+                    href="/downloads/PVC_Proxy_Setup_v1.0.exe"
+                    download
+                    className="text-sm font-medium text-white hover:underline decoration-zinc-500 underline-offset-4 flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity"
+                  >
+                    Download
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <div id="pricing">
         <Pricing2
@@ -432,9 +559,9 @@ export const LandingPage = () => {
       {/* Footer */}
       <footer className="py-12 border-t border-white/10 text-center text-gray-500 text-sm relative z-10 bg-black">
         <div className="flex justify-center gap-6 mb-8">
-          <a href="#" className="hover:text-white transition-colors">
+          <Link href="/docs" className="hover:text-white transition-colors">
             Documentation
-          </a>
+          </Link>
           <a
             href="https://github.com/promptversioncontrol-org"
             target="_blank"

@@ -314,7 +314,6 @@ model OrganizationRole {
   @@map("organization_role")
 }
 
-// --- INTEGRATIONS ---
 
 model TelegramToken {
   id        String   @id @default(cuid())
@@ -334,3 +333,4 @@ model UserTelegram {
   userId    String   @unique
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+

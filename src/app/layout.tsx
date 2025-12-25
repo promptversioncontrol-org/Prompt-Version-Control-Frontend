@@ -5,7 +5,8 @@ import Threads from '@/shared/components/Threads';
 import { UsernameGuard } from '@/features/auth/components/username-guard';
 import PageTransition from '@/shared/components/ui/page-transition';
 
-import { SnowfallEffect } from '@/shared/components/snowfall-effect';
+// import { SnowfallEffect } from '@/shared/components/snowfall-effect';
+
 import { Toaster } from '@/shared/components/ui/sonner';
 
 const geistSans = Geist({
@@ -46,8 +47,7 @@ export default function RootLayout({
         >
           <Threads amplitude={1} distance={0} enableMouseInteraction={true} />
         </div>
-        <SnowfallEffect />
-        <Toaster />
+
         <div style={{ position: 'relative', zIndex: 1 }}>
           <UsernameGuard />
 
