@@ -48,9 +48,9 @@ export const auth = betterAuth({
     passkey({
       rpID: process.env.NEXT_PUBLIC_APP_URL
         ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname
-        : 'localhost',
+        : '',
       rpName: 'PVC',
-      origin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+      origin: process.env.NEXT_PUBLIC_APP_URL,
       authenticatorSelection: {
         authenticatorAttachment: 'platform',
         residentKey: 'preferred',

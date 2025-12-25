@@ -106,7 +106,7 @@ export async function createCheckoutSession(priceId: string, orgId?: string) {
   console.log('Final Price ID:', finalPriceId);
   console.log('API Key Prefix:', process.env.STRIPE_SECRET_KEY?.slice(0, 8));
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
 
   const checkoutSession = await stripe.checkout.sessions.create({
     mode: 'subscription',
