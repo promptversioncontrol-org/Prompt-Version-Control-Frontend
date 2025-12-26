@@ -4,6 +4,7 @@ import './globals.css';
 import Threads from '@/shared/components/Threads';
 import { UsernameGuard } from '@/features/auth/components/username-guard';
 import PageTransition from '@/shared/components/ui/page-transition';
+import { SupportWidget } from '@/features/support/components/support-widget';
 
 // import { SnowfallEffect } from '@/shared/components/snowfall-effect';
 
@@ -53,6 +54,7 @@ export default function RootLayout({
 
           <PageTransition>{children}</PageTransition>
           <Toaster position="top-center" richColors />
+          <SupportWidget />
         </div>
       </body>
     </html>

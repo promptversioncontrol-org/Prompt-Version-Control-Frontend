@@ -29,14 +29,12 @@ export function TwoFactorSetup() {
     setIsLoading(true);
     setError(null);
     try {
-      // @ts-expect-error - enable might return totpURI according to docs/search
       const res = await authClient.twoFactor.enable({
         password,
       });
       if (res.error) {
         setError(res.error.message || 'Failed to enable 2FA');
       } else {
-        // @ts-expect-error - totpURI is returned on first enable
         setTotpUri(res.data.totpURI);
       }
     } catch {
