@@ -89,10 +89,10 @@ export function UserProfileSettings({ user }: UserProfileSettingsProps) {
   };
 
   return (
-    <Card>
+    <Card className="bg-black border-zinc-800">
       <CardHeader>
-        <CardTitle>Profile Settings</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-white">Profile Settings</CardTitle>
+        <CardDescription className="text-zinc-400">
           Update your public profile information.
         </CardDescription>
       </CardHeader>
@@ -114,6 +114,7 @@ export function UserProfileSettings({ user }: UserProfileSettingsProps) {
                     <FormControl>
                       <Input
                         placeholder="https://..."
+                        className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500"
                         {...field}
                         value={field.value || ''}
                       />
@@ -135,7 +136,11 @@ export function UserProfileSettings({ user }: UserProfileSettingsProps) {
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Your Name" {...field} />
+                      <Input
+                        placeholder="Your Name"
+                        className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -151,6 +156,7 @@ export function UserProfileSettings({ user }: UserProfileSettingsProps) {
                     <FormControl>
                       <Input
                         placeholder="username"
+                        className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500"
                         {...field}
                         value={field.value || ''}
                       />
@@ -170,7 +176,7 @@ export function UserProfileSettings({ user }: UserProfileSettingsProps) {
                   <FormControl>
                     <Textarea
                       placeholder="Tell us a little bit about yourself"
-                      className="resize-none"
+                      className="resize-none bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500"
                       {...field}
                       value={field.value || ''}
                     />
@@ -206,6 +212,7 @@ export function UserProfileSettings({ user }: UserProfileSettingsProps) {
                           <FormControl>
                             <Input
                               placeholder="Title (e.g. Website)"
+                              className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500"
                               {...field}
                             />
                           </FormControl>
@@ -220,7 +227,8 @@ export function UserProfileSettings({ user }: UserProfileSettingsProps) {
                         <FormItem className="flex-[2]">
                           <FormControl>
                             <Input
-                              placeholder="URL (e.g. https://omiotek.com)"
+                              placeholder="URL (e.g. https://www.adampukaluk.pl)"
+                              className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500"
                               {...field}
                             />
                           </FormControl>
