@@ -4,6 +4,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Ticket } from '../actions/get-tickets';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
+import Link from 'next/link';
 import {
   MoreHorizontal,
   ArrowUpDown,
@@ -38,9 +39,12 @@ export const columns: ColumnDef<Ticket>[] = [
     accessorKey: 'id',
     header: 'ID',
     cell: ({ row }) => (
-      <span className="font-mono text-xs text-zinc-600">
-        {row.getValue('id').slice(-4)}
-      </span>
+      <Link
+        href={`/admin/tickets/${row.original.id}`}
+        className="font-mono text-xs text-zinc-600 hover:text-indigo-400 hover:underline"
+      >
+        {(row.getValue('id') as string).slice(-4)}
+      </Link>
     ),
   },
   {
@@ -84,10 +88,17 @@ export const columns: ColumnDef<Ticket>[] = [
       const cat = row.original.category;
       const sub = row.original.subCategory;
       return (
-        <div className="flex flex-col">
-          <span className="font-medium text-zinc-200">{cat}</span>
-          {sub && <span className="text-xs text-zinc-500">{sub}</span>}
-        </div>
+        <Link
+          href={`/admin/tickets/${row.original.id}`}
+          className="group block"
+        >
+          <div className="flex flex-col">
+            <span className="font-medium text-zinc-200 group-hover:text-indigo-400 transition-colors underline-offset-4 group-hover:underline">
+              {cat}
+            </span>
+            {sub && <span className="text-xs text-zinc-500">{sub}</span>}
+          </div>
+        </Link>
       );
     },
   },
@@ -136,6 +147,14 @@ export const columns: ColumnDef<Ticket>[] = [
               className="cursor-pointer focus:bg-zinc-800 focus:text-white"
             >
               Copy User Email
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a
+                href={`/admin/tickets/${ticket.id}`}
+                className="cursor-pointer focus:bg-zinc-800 focus:text-white"
+              >
+                View Details
+              </a>
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-zinc-800" />
             <DropdownMenuItem

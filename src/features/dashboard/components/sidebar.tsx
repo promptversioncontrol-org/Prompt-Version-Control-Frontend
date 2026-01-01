@@ -14,6 +14,7 @@ import {
   ChevronRight,
   LogOut,
   Building2,
+  LifeBuoy,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { authClient, useSession } from '@/shared/lib/auth-client';
@@ -59,6 +60,11 @@ export function Sidebar({ className }: SidebarProps) {
       title: 'Organizations',
       href: '/dashboard/organizations',
       icon: Building2,
+    },
+    {
+      title: 'Support',
+      href: '/dashboard/support',
+      icon: LifeBuoy,
     },
   ];
 
