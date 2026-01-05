@@ -16,14 +16,21 @@ import {
   Server,
   ShieldCheck,
   ChevronsDown,
+  Copy,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { motion } from 'framer-motion';
 import { ArchitectureSection } from './architecture-section';
 import { IntegrationCard } from './integration-card';
 import { Pricing2 } from '@/shared/components/ui/pricing-cards';
+import { Navbar } from './navbar';
 
 export const LandingPage = () => {
+  const [installMethod, setInstallMethod] = useState<'curl' | 'wget'>('curl');
+  // Fallback to localhost if env var is not set, to prevent "undefined" in URL
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const downloadUrl = `${appUrl}/downloads/PVC_Proxy_Setup_v1.0.exe`;
+
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-white selection:text-black overflow-x-hidden relative">
       {/* Background Ambient Noise/Gradient (Subtle) */}
@@ -35,51 +42,7 @@ export const LandingPage = () => {
       </div>
 
       {/* Navbar */}
-      <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/50 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {/* Logo from public/icon/logo.svg */}
-            <Image
-              src="/icon/logo.svg"
-              alt="PVC"
-              width={48}
-              height={48}
-              className="w-12 h-12"
-            />
-            <span className="font-semibold tracking-tight text-lg">PVC</span>
-          </div>
-
-          <div className="hidden md:flex gap-8 text-sm font-medium text-gray-400">
-            <Link href="/docs" className="hover:text-white transition-colors">
-              Docs
-            </Link>
-            <a href="#features" className="hover:text-white transition-colors">
-              Features
-            </a>
-            <a
-              href="#integrations"
-              className="hover:text-white transition-colors"
-            >
-              Integrations
-            </a>
-            <a href="#pricing" className="hover:text-white transition-colors">
-              Pricing
-            </a>
-          </div>
-
-          <div className="flex gap-4">
-            <Link
-              href="/sign-in"
-              className="text-sm font-medium text-gray-300 hover:text-white transition-colors flex items-center"
-            >
-              Log In
-            </Link>
-            <button className="px-4 py-2 bg-white text-black text-sm font-semibold rounded hover:bg-gray-200 transition-all shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-              Get Started
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative z-10 pt-32 pb-24 px-6 text-center max-w-5xl mx-auto">
@@ -418,6 +381,50 @@ export const LandingPage = () => {
                 Download Windows Installer
               </Button>
             </a>
+          </div>
+
+          <div className="max-w-lg mx-auto mt-8">
+            <div className="flex items-center justify-center gap-6 mb-3 text-xs font-mono">
+              <button
+                onClick={() => setInstallMethod('curl')}
+                className={`transition-colors ${installMethod === 'curl' ? 'text-white font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+              >
+                cURL
+              </button>
+              <button
+                onClick={() => setInstallMethod('wget')}
+                className={`transition-colors ${installMethod === 'wget' ? 'text-white font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+              >
+                wget
+              </button>
+            </div>
+            <div className="relative group mx-auto bg-black/40 border border-white/10 rounded-lg p-4 font-mono text-sm text-left flex items-center justify-between hover:border-white/20 transition-colors">
+              <div className="overflow-x-auto whitespace-nowrap scrollbar-none text-zinc-300 pr-8">
+                {installMethod === 'curl' ? (
+                  <>
+                    <span className="text-purple-400">curl</span> -O{' '}
+                    {downloadUrl}
+                  </>
+                ) : (
+                  <>
+                    <span className="text-yellow-400">wget</span> {downloadUrl}
+                  </>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  const cmd =
+                    installMethod === 'curl'
+                      ? `curl -O ${downloadUrl}`
+                      : `wget ${downloadUrl}`;
+                  navigator.clipboard.writeText(cmd);
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-zinc-500 hover:text-white hover:bg-white/10 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                title="Copy command"
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-12 max-w-4xl mx-auto text-left">

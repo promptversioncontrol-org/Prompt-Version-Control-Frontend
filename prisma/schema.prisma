@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,89 +7,57 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id               String                 @id
-  name             String
-  email            String
-  emailVerified    Boolean                @default(false)
-  image            String?
-  username         String?                @unique
-  createdAt        DateTime               @default(now())
-  updatedAt        DateTime               @default(now()) @updatedAt
-  sessions         Session[]
-  accounts         Account[]
-  sshKeys          SshKey[]
-  workspacesOwned  Workspace[]
-  contributions    WorkspaceContributor[]
-  twoFactorEnabled Boolean?               @default(false)
-  twoFactor        TwoFactor?
+// --- USER & AUTH ---
 
-  // --- Billing & Organizations (Billing Branch) ---
-  plan               String  @default("free")
+model User {
+  id            String  @id
+  name          String
+  email         String  @unique
+  emailVerified Boolean @default(false)
+  image         String?
+  username      String? @unique
+  description   String?
+  links         Json?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @default(now()) @updatedAt
+
+  role String @default("user") // "user" | "admin"
+
+  // --- Auth & Security ---
+  twoFactorEnabled Boolean?   @default(false)
+  twoFactor        TwoFactor?
+  accounts         Account[]
+  sessions         Session[]
+  sshKeys          SshKey[]
+  passkeys         Passkey[]
+
+  // --- Billing ---
+  plan               String    @default("free")
   stripeCustomerId   String?
   subscriptionStatus String?
+  currentPeriodEnd   DateTime?
 
-  receivedInvitations WorkspaceInvitation[] @relation("ReceivedInvitations")
-  sentInvitations     WorkspaceInvitation[] @relation("SentInvitations")
+  // --- Workspaces ---
+  workspacesOwned     Workspace[]
+  contributions       WorkspaceContributor[]
+  receivedInvitations WorkspaceInvitation[]  @relation("ReceivedInvitations")
+  sentInvitations     WorkspaceInvitation[]  @relation("SentInvitations")
 
+  // --- Organizations ---
   organizationMemberships OrganizationMember[]
   sentOrgInvitations      OrganizationInvitation[] @relation("SentOrganizationInvitations")
+  // Note: Received Org Invitations usually link via email, but if user exists we can link here:
   receivedOrgInvitations  OrganizationInvitation[] @relation("ReceivedOrganizationInvitations")
 
-  // --- Auth Features (Auth Branch) ---
+  // --- Integrations ---
   telegramTokens TelegramToken[]
-  userTelegrams  UserTelegram[]
-  passkeys       Passkey[]
+  userTelegrams  UserTelegram?
+  supportTickets SupportTicket[]
+  ticketMessages TicketMessage[]
 
-  @@unique([email])
   @@map("user")
-}
-
-// --- Modified Passkey (Auth Branch - Fixed Version) ---
-model Passkey {
-  id        String  @id
-  name      String?
-  publicKey String
-  userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // New fields required by better-auth v1+
-  credentialID String
-  aaguid       String
-
-  counter    Int
-  deviceType String
-  backedUp   Boolean
-  transports String?
-  createdAt  DateTime?
-
-  @@map("passkey")
-}
-
-model TwoFactor {
-  id          String @id
-  secret      String
-  backupCodes String
-  userId      String
-  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId])
-  @@map("two_factor")
-}
-
-model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([token])
-  @@map("session")
 }
 
 model Account {
@@ -117,6 +79,20 @@ model Account {
   @@map("account")
 }
 
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
 model Verification {
   id         String   @id
   identifier String   @unique
@@ -128,24 +104,74 @@ model Verification {
   @@map("verification")
 }
 
+model TwoFactor {
+  id          String @id
+  secret      String
+  backupCodes String
+  userId      String @unique
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("two_factor")
+}
+
+model Passkey {
+  id           String    @id
+  name         String?
+  publicKey    String
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialID String
+  aaguid       String
+  counter      Int
+  deviceType   String
+  backedUp     Boolean
+  transports   String?
+  createdAt    DateTime?
+
+  @@map("passkey")
+}
+
 model SshKey {
   id          String   @id @default(cuid())
   name        String?
   publicKey   String
   fingerprint String   @unique
   createdAt   DateTime @default(now())
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("ssh_key")
 }
 
+// --- WORKSPACES ---
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String?
+  slug        String   @default("workspace")
+  description String?
+  image       String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  contributors  WorkspaceContributor[]
+  securityRules SecurityRule[]
+  invitations   WorkspaceInvitation[]
+  leaks         WorkspaceLeak[]
+
+  @@unique([userId, slug])
+  @@map("workspace")
+}
+
 model WorkspaceContributor {
   id      String   @id @default(cuid())
-
   role    String   @default("member") // owner, co-owner, moderator, member
-
   addedAt DateTime @default(now())
 
   workspaceId String
@@ -157,70 +183,39 @@ model WorkspaceContributor {
   @@unique([workspaceId, userId])
 }
 
-model Workspace {
-  id          String   @id @default(cuid())
-  name        String?
-  slug        String   @default("workspace")
-  createdAt   DateTime @default(now())
-  description String?
-
-
-  image       String?
-
-
-  userId        String
-  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  contributors  WorkspaceContributor[]
-  securityRules SecurityRule[]
-
-  // Billing Branch Relations
-  invitations WorkspaceInvitation[]
-  leaks       WorkspaceLeak[]
-
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, slug])
-  @@map("workspace")
-}
-
-// --- Invitations & Leaks (Billing Branch) ---
-
 model WorkspaceInvitation {
   id        String   @id @default(cuid())
   token     String   @unique
   status    String   @default("PENDING")
   role      String   @default("member")
-  createdAt DateTime @default(now())
   expiresAt DateTime
+  createdAt DateTime @default(now())
 
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  inviteeId String
-  invitee   User   @relation("ReceivedInvitations", fields: [inviteeId], references: [id], onDelete: Cascade)
-
   inviterId String
   inviter   User   @relation("SentInvitations", fields: [inviterId], references: [id], onDelete: Cascade)
+
+  inviteeId String
+  invitee   User   @relation("ReceivedInvitations", fields: [inviteeId], references: [id], onDelete: Cascade)
 
   @@map("workspace_invitation")
 }
 
 model WorkspaceLeak {
-  id          String    @id @default(cuid())
+  id         String   @id @default(cuid())
+  severity   String
+  message    String
+  snippet    String?
+  source     String
+  username   String?
+  ruleId     String?
+  sessionId  String?
+  detectedAt DateTime @default(now())
+
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  severity String
-  message  String
-  snippet  String?
-  source   String
-  username String?
-
-  ruleId    String?
-  sessionId String?
-
-  detectedAt DateTime @default(now())
 
   @@index([workspaceId])
   @@map("workspace_leak")
@@ -240,61 +235,46 @@ model SecurityRule {
   @@map("security_rule")
 }
 
-// --- Telegram (Auth Branch) ---
-
-model TelegramToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  expiresAt DateTime
-}
-
-model UserTelegram {
-  id        String   @id @default(cuid())
-  chatId    String   @unique
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-}
-
-// --- Organizations (Billing Branch) ---
+// --- ORGANIZATIONS ---
 
 model Organization {
-  id                 String   @id @default(cuid())
-  name               String
-  slug               String   @unique
-  description        String?
-  image              String?
-  website            String?
-  industry           String?
-  plan               String   @default("free")
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  image       String?
+  website     String?
+  industry    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Billing
+  plan               String  @default("free")
   stripeCustomerId   String?
   subscriptionStatus String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
 
+  // Relations
   members           OrganizationMember[]
-  workspaces        Workspace[]
   invitations       OrganizationInvitation[]
   organizationRoles OrganizationRole[]
+  workspaces        Workspace[]
 
   @@map("organization")
 }
 
 model OrganizationMember {
   id       String   @id @default(cuid())
-  role     String   @default("member") // owner, moderator, member
+  role     String   @default("member")
   joinedAt DateTime @default(now())
 
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  userId             String
-  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organizationRole   OrganizationRole? @relation(fields: [organizationRoleId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   organizationRoleId String?
+  organizationRole   OrganizationRole? @relation(fields: [organizationRoleId], references: [id])
 
   @@unique([organizationId, userId])
   @@map("organization_member")
@@ -304,10 +284,10 @@ model OrganizationInvitation {
   id        String   @id @default(cuid())
   token     String   @unique
   email     String
-  status    String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  status    String   @default("PENDING")
   role      String   @default("member")
-  createdAt DateTime @default(now())
   expiresAt DateTime
+  createdAt DateTime @default(now())
 
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -326,17 +306,84 @@ model OrganizationRole {
   id           String   @id @default(cuid())
   name         String
   description  String?
-  workspaceIds String[] // IDs of workspaces this role can access
+  workspaceIds String[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   members OrganizationMember[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
   @@unique([organizationId, name])
   @@map("organization_role")
 }
 
+model TelegramToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserTelegram {
+  id        String   @id @default(cuid())
+  chatId    String   @unique
+  createdAt DateTime @default(now())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SupportTicket {
+  id          String   @id @default(cuid())
+  subject     String   @default("Support Request")
+  priority    String   @default("normal") // normal, high, urgent
+  email       String
+  category    String
+  subCategory String?
+  message     String // The content of the main issue
+  status      String   @default("OPEN")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  workspaceId String?
+
+  messages TicketMessage[]
+
+  @@map("support_ticket")
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  ticketId String
+  ticket   SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  attachments TicketAttachment[]
+
+  @@map("ticket_message")
+}
+
+model TicketAttachment {
+  id       String @id @default(cuid())
+  url      String
+  fileName String
+  fileType String
+
+  messageId String
+  message   TicketMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("ticket_attachment")
+}
