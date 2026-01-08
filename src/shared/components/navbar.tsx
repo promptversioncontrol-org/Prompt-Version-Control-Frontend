@@ -1,16 +1,18 @@
 'use client';
 
-import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const Navbar = () => {
   return (
     <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/50 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {/* Logo from public/icon/logo.svg */}
-          <Link href="/" className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          >
+            {/* Logo from public/icon/logo.svg */}
             <Image
               src="/icon/logo.svg"
               alt="PVC"
@@ -34,6 +36,9 @@ export const Navbar = () => {
           >
             Features
           </Link>
+          <Link href="/proxy" className="hover:text-white transition-colors">
+            Proxy
+          </Link>
           <Link
             href="/#integrations"
             className="hover:text-white transition-colors"
@@ -42,9 +47,6 @@ export const Navbar = () => {
           </Link>
           <Link href="/#pricing" className="hover:text-white transition-colors">
             Pricing
-          </Link>
-          <Link href="/help" className="hover:text-white transition-colors">
-            Help
           </Link>
         </div>
 

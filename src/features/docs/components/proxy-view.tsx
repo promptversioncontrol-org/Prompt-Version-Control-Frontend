@@ -17,7 +17,7 @@ import {
   Terminal as TerminalIcon,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Navbar } from '@/features/landingpage/components/navbar';
+import { Navbar } from '@/shared/components/navbar';
 import { Button } from '@/shared/components/ui/button';
 import {
   Tabs,
@@ -78,9 +78,15 @@ const SpotlightCard = ({
 };
 
 const LiveLogTerminal = () => {
-  const [logs, setLogs] = useState<string[]>([
-    '[INFO] Proxy initialized on port 6767',
-    '[INFO] Loaded 12 rules from pvc.rules',
+  const [logs, setLogs] = useState<{ text: string; time: string }[]>([
+    {
+      text: '[INFO] Proxy initialized on port 6767',
+      time: new Date().toLocaleTimeString().split(' ')[0],
+    },
+    {
+      text: '[INFO] Loaded 12 rules from pvc.rules',
+      time: new Date().toLocaleTimeString().split(' ')[0],
+    },
   ]);
 
   useEffect(() => {
@@ -94,7 +100,15 @@ const LiveLogTerminal = () => {
     let i = 0;
     const interval = setInterval(() => {
       if (i < newLogs.length) {
-        setLogs((prev) => [...prev, newLogs[i]].slice(-6)); // Keep last 6 lines
+        setLogs((prev) =>
+          [
+            ...prev,
+            {
+              text: newLogs[i],
+              time: new Date().toLocaleTimeString().split(' ')[0],
+            },
+          ].slice(-6),
+        ); // Keep last 6 lines
         i++;
       } else {
         clearInterval(interval);
@@ -114,19 +128,36 @@ const LiveLogTerminal = () => {
         <span className="text-zinc-500 ml-2">pvc-proxy.log — tail -f</span>
       </div>
       <div className="space-y-1.5 h-[140px] flex flex-col justify-end">
-        {logs.filter(Boolean).map((log, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            className={`${log?.includes('[WARN]') ? 'text-amber-400' : log?.includes('[ACTION]') ? 'text-emerald-400' : 'text-zinc-400'}`}
-          >
-            <span className="opacity-30 mr-2 border-r border-white/10 pr-2">
-              {new Date().toLocaleTimeString().split(' ')[0]}
-            </span>
-            {log}
-          </motion.div>
-        ))}
+        {logs.map((log: string | { text: string; time?: string }, i) => {
+          const textStr = typeof log === 'string' ? log : log?.text || '';
+          const timeStr =
+            typeof log === 'object' && log?.time
+              ? log.time
+              : new Date().toLocaleTimeString().split(' ')[0];
+
+          return (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className={`${
+                textStr.includes('[WARN]')
+                  ? 'text-amber-400'
+                  : textStr.includes('[ACTION]')
+                    ? 'text-emerald-400'
+                    : 'text-zinc-400'
+              }`}
+            >
+              <span
+                className="opacity-30 mr-2 border-r border-white/10 pr-2"
+                suppressHydrationWarning
+              >
+                {timeStr}
+              </span>
+              {textStr}
+            </motion.div>
+          );
+        })}
         <div className="animate-pulse bg-zinc-600 w-2 h-4" />
       </div>
     </div>

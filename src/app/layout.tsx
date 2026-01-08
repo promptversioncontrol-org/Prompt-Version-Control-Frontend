@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import Threads from '@/shared/components/Threads';
+import { ThreadsBackground } from '@/shared/components/threads-background';
 import { UsernameGuard } from '@/features/auth/components/username-guard';
 import PageTransition from '@/shared/components/ui/page-transition';
 import { SupportWidget } from '@/features/support/components/support-widget';
@@ -35,19 +35,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100vh',
-            zIndex: -1,
-            pointerEvents: 'none',
-          }}
-        >
-          <Threads amplitude={1} distance={0} enableMouseInteraction={true} />
-        </div>
+        <ThreadsBackground />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           <UsernameGuard />

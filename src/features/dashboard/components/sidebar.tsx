@@ -30,9 +30,14 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navItems = [
     {
@@ -169,7 +174,7 @@ export function Sidebar({ className }: SidebarProps) {
             isCollapsed ? 'justify-center p-2' : '',
           )}
         >
-          {session ? (
+          {mounted && session ? (
             <>
               <Avatar
                 className="h-9 w-9 border border-zinc-700 shadow-sm shrink-0"
