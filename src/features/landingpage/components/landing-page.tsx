@@ -3,22 +3,30 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
+  Check,
   ArrowRight,
   Terminal,
+  Cpu,
   Zap,
   ShieldCheck,
+  Server,
   Layers,
   Activity,
   Globe,
   Code,
-  Book, // New Icon
+  Lock,
+  Book,
+  ChevronsDown,
+  Copy,
+  Download,
 } from 'lucide-react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArchitectureSection } from './architecture-section';
 import { Navbar } from '@/shared/components/navbar';
 import { Pricing2 } from '@/shared/components/ui/pricing-cards';
+import { Button } from '@/shared/components/ui/button';
 
-// Typewriter Effect (Stable)
+// --- Typewriter Effect (Stable) ---
 const TypewriterText = ({ text }: { text: string }) => {
   const [displayText, setDisplayText] = useState('');
 
@@ -45,9 +53,15 @@ const TypewriterText = ({ text }: { text: string }) => {
 };
 
 export const LandingPage = () => {
+  // --- Animation Hooks ---
   const { scrollY } = useScroll();
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
   const scale = useTransform(scrollY, [0, 300], [1, 0.95]);
+
+  // --- Proxy Installer Logic ---
+  const [installMethod, setInstallMethod] = useState<'curl' | 'wget'>('curl');
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const downloadUrl = `${appUrl}/downloads/PVC_Proxy_Setup_v1.0.exe`;
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-zinc-800 selection:text-white overflow-x-hidden relative">
@@ -59,9 +73,9 @@ export const LandingPage = () => {
 
       <Navbar />
 
-      {/* Hero Section */}
+      {/* --- HERO SECTION --- */}
       <section className="relative z-10 pt-24 pb-32 px-6 text-center max-w-6xl mx-auto min-h-screen flex flex-col justify-center">
-        {/* --- 1. SPINNING LOGO --- */}
+        {/* Spinning Logo */}
         <motion.div
           style={{ opacity, scale }}
           className="flex justify-center mb-12 perspective-1000"
@@ -108,7 +122,7 @@ export const LandingPage = () => {
           observability and policy enforcement.
         </motion.p>
 
-        {/* --- BUTTONS SECTION --- */}
+        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row justify-center gap-4 mb-24">
           <Link
             href="/sign-up"
@@ -140,7 +154,7 @@ export const LandingPage = () => {
           </Link>
         </div>
 
-        {/* 3D Tilt Card - Dashboard Preview (Mobile Responsive) */}
+        {/* 3D Tilt Card - Dashboard Preview */}
         <TiltCard>
           <div className="relative rounded-xl overflow-hidden border border-zinc-800 shadow-[0_0_50px_-10px_rgba(255,255,255,0.05)] bg-black mx-auto max-w-full">
             {/* Fake UI Header */}
@@ -192,7 +206,7 @@ export const LandingPage = () => {
                   </div>
                 </div>
 
-                {/* Abstract Graph - Shorter on Mobile */}
+                {/* Abstract Graph */}
                 <div className="h-32 md:h-48 flex items-end gap-1 md:gap-2 pb-4 border-b border-zinc-800">
                   {[40, 65, 30, 80, 55, 90, 45, 60, 75, 50, 85, 95].map(
                     (h, i) => (
@@ -255,7 +269,138 @@ export const LandingPage = () => {
 
       <ArchitectureSection />
 
-      {/* Features Grid */}
+      {/* --- PVC PROXY INSTALLER SECTION (Merged from feature/docs) --- */}
+      <section
+        id="proxy"
+        className="py-24 relative z-10 border-t border-zinc-900"
+      >
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-white/5 blur-[120px] rounded-full pointer-events-none"></div>
+
+        <div className="max-w-7xl mx-auto px-6 text-center space-y-8">
+          <div className="relative z-10 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-black/50 backdrop-blur-md mb-4">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-xs font-medium text-zinc-300">
+                Latest Release: v1.0.0
+              </span>
+            </div>
+
+            <h2 className="text-5xl font-black tracking-tighter text-white">
+              PVC Proxy
+            </h2>
+            <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+              Secure, observable, and policy-compliant AI request handling for
+              your entire organization.
+            </p>
+          </div>
+
+          {/* Download Button */}
+          <div className="flex justify-center pt-6">
+            <a href="/downloads/PVC_Proxy_Setup_v1.0.exe" download>
+              <Button
+                size="lg"
+                className="h-14 px-8 text-base bg-white text-black hover:bg-zinc-200 transition-all hover:scale-105 group border-0 font-semibold"
+              >
+                <Download className="mr-2 h-5 w-5 group-hover:animate-bounce" />
+                Download Windows Installer
+              </Button>
+            </a>
+          </div>
+
+          {/* CLI Install Box */}
+          <div className="max-w-lg mx-auto mt-8">
+            <div className="flex items-center justify-center gap-6 mb-3 text-xs font-mono">
+              <button
+                onClick={() => setInstallMethod('curl')}
+                className={`transition-colors ${
+                  installMethod === 'curl'
+                    ? 'text-white font-bold'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                cURL
+              </button>
+              <button
+                onClick={() => setInstallMethod('wget')}
+                className={`transition-colors ${
+                  installMethod === 'wget'
+                    ? 'text-white font-bold'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                wget
+              </button>
+            </div>
+
+            <div className="relative group mx-auto bg-black border border-zinc-800 rounded-lg p-4 font-mono text-sm text-left flex items-center justify-between hover:border-zinc-700 transition-colors backdrop-blur-md">
+              <div className="overflow-x-auto whitespace-nowrap scrollbar-none text-zinc-300 pr-8">
+                {installMethod === 'curl' ? (
+                  <>
+                    <span className="text-purple-400">curl</span> -O{' '}
+                    {downloadUrl}
+                  </>
+                ) : (
+                  <>
+                    <span className="text-yellow-400">wget</span> {downloadUrl}
+                  </>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  const cmd =
+                    installMethod === 'curl'
+                      ? `curl -O ${downloadUrl}`
+                      : `wget ${downloadUrl}`;
+                  navigator.clipboard.writeText(cmd);
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                title="Copy command"
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Proxy Features Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-12 max-w-4xl mx-auto text-left">
+            {[
+              {
+                icon: ShieldCheck,
+                title: 'Enterprise Security',
+                desc: 'Bank-grade encryption and policy enforcement for all AI traffic.',
+              },
+              {
+                icon: Server,
+                title: 'Local Processing',
+                desc: 'Run a local proxy server that intercepts and audits prompts in real-time.',
+              },
+              {
+                icon: ChevronsDown,
+                title: 'Zero Latency',
+                desc: 'Optimized Rust-based core ensures minimal impact on request times.',
+              },
+            ].map((feature, i) => (
+              <div
+                key={i}
+                className="p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800 backdrop-blur-sm hover:bg-zinc-900/50 transition-colors"
+              >
+                <feature.icon className="h-8 w-8 text-zinc-400 mb-4" />
+                <h3 className="text-lg font-bold text-white mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  {feature.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Grid (Bento) */}
       <section className="py-32 px-6 max-w-7xl mx-auto">
         <div className="mb-20 text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">

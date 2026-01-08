@@ -63,7 +63,7 @@ export function DocsView() {
               <p className="text-zinc-400 mb-4">
                 Install the PVC CLI globally via npm.
               </p>
-              <CodeBlock code="npm install -g @pvc/cli" title="Terminal" />
+              <CodeBlock code="npm install -g @adam903/pvc" title="Terminal" />
             </div>
             {/* Krok 2 */}
             <div className="relative">

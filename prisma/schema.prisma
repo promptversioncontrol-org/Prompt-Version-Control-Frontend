@@ -56,6 +56,8 @@ model User {
   userTelegrams  UserTelegram?
   supportTickets SupportTicket[]
 
+  ticketMessages TicketMessage[]
+
   @@map("user")
 }
 
@@ -339,10 +341,13 @@ model UserTelegram {
 
 model SupportTicket {
   id          String   @id @default(cuid())
+
+  subject     String   @default("Support Request")
+  priority    String   @default("normal") // normal, high, urgent
   email       String
   category    String
   subCategory String?
-  message     String
+  message     String // The content of the main issue
   status      String   @default("OPEN")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -352,5 +357,35 @@ model SupportTicket {
 
   workspaceId String?
 
+  messages TicketMessage[]
+
   @@map("support_ticket")
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  ticketId String
+  ticket   SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  attachments TicketAttachment[]
+
+  @@map("ticket_message")
+}
+
+model TicketAttachment {
+  id       String @id @default(cuid())
+  url      String
+  fileName String
+  fileType String
+
+  messageId String
+  message   TicketMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("ticket_attachment")
 }

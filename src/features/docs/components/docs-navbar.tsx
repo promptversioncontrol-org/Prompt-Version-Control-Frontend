@@ -19,7 +19,6 @@ function DocsNavbarContent() {
   const isActive = (href: string) => {
     if (href === '/docs') return currentTab === 'docs';
     if (href === '/docs?tab=api') return currentTab === 'api';
-    if (href === '/docs?tab=proxy') return currentTab === 'proxy';
     return false;
   };
 
