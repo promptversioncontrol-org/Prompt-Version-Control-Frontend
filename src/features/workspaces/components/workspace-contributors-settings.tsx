@@ -27,10 +27,8 @@ import {
 } from 'lucide-react';
 import { inviteContributor } from '@/features/workspaces/actions/invite-contributor';
 import { removeContributor } from '@/features/workspaces/actions/remove-contributor';
-import {
-  searchUsers,
-  type SearchUserResult,
-} from '@/features/users/actions/search-users';
+import { searchUsers } from '@/features/users/actions/search-users';
+import type { SearchUserResult } from '@/features/users/contracts/user.dto';
 import { toast } from 'sonner';
 import { cn } from '@/shared/lib/utils';
 

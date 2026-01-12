@@ -5,6 +5,7 @@ import type {
   CreateWorkspaceResponse,
 } from '../types/workspace.types';
 import { generateSlug, ensureUniqueSlug } from '@/shared/utils/slug';
+import { prisma } from '@/shared/lib/prisma';
 import { Resend } from 'resend';
 import { InvitationEmailTemplate } from '@/shared/components/mail/invitation-email-template';
 import crypto from 'crypto';

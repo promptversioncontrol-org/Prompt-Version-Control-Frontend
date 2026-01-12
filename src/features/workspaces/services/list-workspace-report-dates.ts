@@ -29,7 +29,7 @@ export async function listWorkspaceReportDates(
     const dates =
       listResponse.CommonPrefixes?.map((prefix) =>
         prefix.Prefix?.slice(basePrefix.length).replace(/\/$/, ''),
-      ).filter(Boolean) ?? [];
+      ).filter((date): date is string => !!date) ?? [];
 
     return dates;
   } catch (error) {

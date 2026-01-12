@@ -114,7 +114,6 @@ export default async function WorkspaceSettingsPage({
         </TabsList>
 
         <TabsContent value="general" className="mt-6">
-          {/* @ts-expect-error Prisma Client outdated (locked dll), image field exists in DB */}
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           <WorkspaceGeneralSettings workspace={workspace as any} />
         </TabsContent>

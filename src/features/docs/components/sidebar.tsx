@@ -13,7 +13,7 @@ interface DocsSidebarProps {
 }
 
 export function DocsSidebar({ isOpen, isMobile, onClose }: DocsSidebarProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() || '';
 
   const items = [
     {

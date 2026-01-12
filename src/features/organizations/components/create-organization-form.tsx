@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 
 // Actions
 import { createOrganizationAction } from '../actions/create-organization';
+import { getUserWorkspacesAction } from '@/features/workspaces/actions/get-user-workspaces';
+import { searchUsers } from '@/features/users/actions/search-users';
+import type { SearchUserResult } from '@/features/users/contracts/user.dto';
 
 // Contracts / DTOs
 import {
@@ -35,11 +38,16 @@ import { Loader2, Check } from 'lucide-react';
 export function CreateOrganizationForm({ userId }: { userId: string }) {
   const [isPending, setIsPending] = useState(false);
   const [step, setStep] = useState(1);
+  const [availableWorkspaces, setAvailableWorkspaces] = useState<
+    { id: string; name: string | null; slug: string }[]
+  >([]);
   const router = useRouter();
 
   // --- Form Initialization using DTO ---
   const form = useForm<CreateOrganizationDto>({
-    resolver: zodResolver(createOrganizationSchema),
+    resolver: zodResolver(
+      createOrganizationSchema,
+    ) as Resolver<CreateOrganizationDto>,
     defaultValues: {
       name: '',
       slug: '',
@@ -68,14 +76,7 @@ export function CreateOrganizationForm({ userId }: { userId: string }) {
   async function onSubmit(values: CreateOrganizationDto) {
     setIsPending(true);
     try {
-      const result = await createOrganizationAction({ ...values, userId });
-      if (result.success) {
-        router.push(`/dashboard/organizations/`);
-        router.refresh();
-      } else {
-        console.error(result.error);
-        // You could add a toast error here
-      }
+      await createOrganizationAction({ ...values, userId });
     } catch (error) {
       console.error(error);
     } finally {
@@ -94,7 +95,6 @@ export function CreateOrganizationForm({ userId }: { userId: string }) {
           : [];
 
     if (step < 3) {
-      // @ts-expect-error - Trigger validation for subset of fields
       const valid = await form.trigger(fields);
       if (valid) setStep((s) => s + 1);
     } else {

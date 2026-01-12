@@ -26,10 +26,8 @@ import {
 import { cn } from '@/shared/lib/utils';
 
 import { inviteMemberAction } from '../actions/invite-member';
-import {
-  searchUsers,
-  type SearchUserResult,
-} from '@/features/users/actions/search-users';
+import { searchUsers } from '@/features/users/actions/search-users';
+import type { SearchUserResult } from '@/features/users/contracts/user.dto';
 
 interface InviteMemberDialogProps {
   organizationId: string;

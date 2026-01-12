@@ -9,6 +9,6 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_key', {
-  apiVersion: '2024-12-18.acacia', // Latest or pinned version
+  apiVersion: '2025-12-15.clover', // Latest or pinned version
   typescript: true,
 });

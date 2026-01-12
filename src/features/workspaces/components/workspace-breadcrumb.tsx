@@ -11,7 +11,7 @@ interface WorkspaceBreadcrumbProps {
 export function WorkspaceBreadcrumb({
   workspaceSlug,
 }: WorkspaceBreadcrumbProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() || '';
   const segments = pathname.split('/').filter(Boolean);
 
   // Find where 'workspaces' and the slug is to determine context

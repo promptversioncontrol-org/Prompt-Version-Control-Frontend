@@ -6,7 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 export default function WorkspacesRedirect() {
   const router = useRouter();
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string | undefined;
 
   useEffect(() => {
     if (slug) {

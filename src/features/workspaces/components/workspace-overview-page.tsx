@@ -141,11 +141,7 @@ export default async function WorkspaceOverviewPage({
                     ● Real-time
                   </Badge>
                 </div>
-                <LiveStreamFeed
-                  workspaceId={workspace.id}
-                  workspaceSlug={workspace.slug}
-                  token={token}
-                />
+                <LiveStreamFeed workspaceId={workspace.id} token={token} />
               </TabsContent>
 
               <TabsContent value="history" className="mt-4">

@@ -128,7 +128,6 @@ export default function NewWorkspacePage() {
         body: JSON.stringify({
           name: data.name,
           description: data.description,
-          image: data.image,
           contributors: data.contributors,
         }),
       });

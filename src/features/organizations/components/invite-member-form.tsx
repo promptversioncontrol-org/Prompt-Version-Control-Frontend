@@ -15,12 +15,8 @@ import { Loader2 } from 'lucide-react';
 
 export function InviteMemberForm({
   organizationId,
-  slug,
-  userId,
 }: {
   organizationId: string;
-  slug: string;
-  userId: string;
 }) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('member');
@@ -32,10 +28,10 @@ export function InviteMemberForm({
     setIsPending(true);
     setMessage('');
     try {
-      await inviteMemberAction(organizationId, email, role, userId, slug);
+      await inviteMemberAction(organizationId, email, role);
       setMessage('Invitation sent!');
       setEmail('');
-    } catch (err) {
+    } catch {
       setMessage('Failed to send invitation.');
     } finally {
       setIsPending(false);

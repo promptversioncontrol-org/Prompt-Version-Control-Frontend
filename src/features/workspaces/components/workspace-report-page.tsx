@@ -28,7 +28,7 @@ export default async function WorkspaceReportPage({
 
   let report: unknown = null;
   try {
-    report = await getWorkspaceReport(workspace.id, date);
+    report = await getWorkspaceReport(workspace.id, workspace.userId, date);
   } catch {
     // If fetching fails, return 404 to align with routing expectations
     notFound();

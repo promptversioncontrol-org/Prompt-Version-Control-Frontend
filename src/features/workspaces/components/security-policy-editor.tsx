@@ -86,6 +86,20 @@ const DEFAULT_RULES: Partial<SecurityRule>[] = [
   },
 ];
 
+const normalizeRules = (
+  rules: Array<Partial<SecurityRule>>,
+  workspaceId: string,
+): SecurityRule[] =>
+  rules.map((rule) => ({
+    id: rule.id ?? crypto.randomUUID(),
+    workspaceId: rule.workspaceId ?? workspaceId,
+    pattern: rule.pattern ?? '',
+    category: rule.category ?? 'Files',
+    description: rule.description ?? null,
+    createdAt: rule.createdAt ?? new Date(),
+    updatedAt: rule.updatedAt ?? new Date(),
+  }));
+
 const CATEGORIES = ['Folders', 'Files'];
 
 export function SecurityPolicyEditor({
@@ -93,8 +107,11 @@ export function SecurityPolicyEditor({
   initialRules = [],
   onSave,
 }: SecurityPolicyEditorProps) {
-  const [rules, setRules] = useState<SecurityRule[]>(
-    initialRules.length > 0 ? initialRules : DEFAULT_RULES,
+  const [rules, setRules] = useState<SecurityRule[]>(() =>
+    normalizeRules(
+      initialRules.length > 0 ? initialRules : DEFAULT_RULES,
+      workspaceId,
+    ),
   );
   const [newPattern, setNewPattern] = useState('');
   const [newCategory, setNewCategory] = useState('Files');

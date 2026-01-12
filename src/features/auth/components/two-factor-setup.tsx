@@ -16,6 +16,11 @@ import {
 import QRCode from 'react-qr-code';
 import { useSession } from '@/shared/lib/auth-client';
 
+type TwoFactorEnableResult = {
+  error?: { message?: string };
+  data?: { totpURI?: string; backupCodes?: string[] };
+};
+
 export function TwoFactorSetup() {
   const { data: session } = useSession();
   const [password, setPassword] = useState('');
@@ -32,6 +37,10 @@ export function TwoFactorSetup() {
       const res = await authClient.twoFactor.enable({
         password,
       });
+      const res: TwoFactorEnableResult = {
+        error: (rawRes as unknown as TwoFactorEnableResult).error,
+        data: (rawRes as unknown as TwoFactorEnableResult).data,
+      };
       if (res.error) {
         setError(res.error.message || 'Failed to enable 2FA');
       } else {
@@ -48,14 +57,23 @@ export function TwoFactorSetup() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await authClient.twoFactor.enable({
+      const rawRes = await (
+        authClient.twoFactor.enable as unknown as (args: {
+          password: string;
+          code: string;
+        }) => Promise<TwoFactorEnableResult>
+      )({
         password,
         code: verificationCode,
       });
+      const res: TwoFactorEnableResult = {
+        error: (rawRes as TwoFactorEnableResult).error,
+        data: (rawRes as TwoFactorEnableResult).data,
+      };
       if (res.error) {
         setError(res.error.message || 'Failed to enable 2FA');
       } else {
-        setBackupCodes(res.data.backupCodes);
+        setBackupCodes(res.data?.backupCodes || null);
         setTotpUri(null); // Clear QR code
       }
     } catch {

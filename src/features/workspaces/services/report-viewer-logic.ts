@@ -43,8 +43,8 @@ export function analyzeSession(session: ReportSession): SessionAnalysis {
   const tokenPoints: TokenPoint[] = [];
   const toolCalls: ToolCall[] = [];
   const fileEdits: FileEdit[] = [];
-  const turnContexts: unknown[] = [];
-  let sessionMeta: unknown = null;
+  const turnContexts: TurnContextInfo[] = [];
+  let sessionMeta: Record<string, unknown> | undefined;
   let rateLimits: unknown = null;
   let maxContextWindow = 0;
 
@@ -70,7 +70,7 @@ export function analyzeSession(session: ReportSession): SessionAnalysis {
 
     switch (evt.type) {
       case 'session_meta':
-        sessionMeta = evt.payload as unknown as Record<string, unknown>;
+        sessionMeta = (evt.payload as Record<string, unknown>) || undefined;
         timelineItem.category = 'meta';
         timelineItem.title = 'Session Started';
         timelineItem.subtitle = (evt.payload as Record<string, unknown>)
@@ -78,11 +78,17 @@ export function analyzeSession(session: ReportSession): SessionAnalysis {
         break;
 
       case 'turn_context': {
+        const payload = (evt.payload as Record<string, unknown>) || {};
         turnContexts.push({
           tsMs,
-          ...(evt.payload as Record<string, unknown>),
-        } as TurnContextInfo);
-        const model = (evt.payload as Record<string, unknown>)?.model as string;
+          cwd: payload.cwd as string | undefined,
+          approvalPolicy: payload.approvalPolicy as string | undefined,
+          sandboxPolicy: payload.sandboxPolicy as string | undefined,
+          model: payload.model as string | undefined,
+          effort: payload.effort as string | undefined,
+          summary: payload.summary as string | undefined,
+        });
+        const model = payload?.model as string;
         if (model) {
           modelCounts[model] = (modelCounts[model] || 0) + 1;
         }

@@ -6,6 +6,7 @@ import { Card } from '@/shared/components/ui/card';
 import { Check, ArrowRight, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import type Stripe from 'stripe';
 
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -32,12 +33,15 @@ export default async function BillingSuccessPage(props: Props) {
     // Force DB Sync (Fallback for Webhooks)
     if (session.payment_status === 'paid' && session.metadata?.userId) {
       const userId = session.metadata.userId;
-      www;
+
       const subscriptionId = session.subscription as string;
 
       if (subscriptionId) {
         const subscription =
           await stripe.subscriptions.retrieve(subscriptionId);
+        const currentPeriodEnd = (
+          subscription as Stripe.Subscription & { current_period_end?: number }
+        ).current_period_end;
 
         await prisma.user.update({
           where: { id: userId },
@@ -45,7 +49,9 @@ export default async function BillingSuccessPage(props: Props) {
             plan: PlanType.PREMIUM,
             stripeCustomerId: session.customer as string,
             subscriptionStatus: subscription.status,
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+            currentPeriodEnd: currentPeriodEnd
+              ? new Date(currentPeriodEnd * 1000)
+              : null,
           },
         });
       }
