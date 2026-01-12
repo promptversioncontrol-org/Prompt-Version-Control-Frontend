@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { DocsSidebar } from './sidebar';
+import { cn } from '@/shared/lib/utils';
 
 interface DocsShellProps {
   children: React.ReactNode;
@@ -14,11 +15,13 @@ export function DocsShell({ children }: DocsShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const isProxyTab = searchParams?.get('tab') === 'proxy';
 
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
-      if (window.innerWidth < 1024) {
+      if (window.innerWidth < 1024 || isProxyTab) {
         setIsSidebarOpen(false);
       } else {
         setIsSidebarOpen(true);
@@ -28,7 +31,7 @@ export function DocsShell({ children }: DocsShellProps) {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  }, [isProxyTab]);
 
   // Close sidebar on mobile when navigating
   useEffect(() => {
@@ -63,7 +66,10 @@ export function DocsShell({ children }: DocsShellProps) {
         animate={{ left: isSidebarOpen ? 256 : 0, opacity: isMobile ? 0 : 1 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="hidden lg:flex fixed top-24 z-40 p-1.5 bg-black border border-white/10 rounded-r-md text-zinc-400 hover:text-white transition-colors"
+        className={cn(
+          'hidden lg:flex fixed top-24 z-40 p-1.5 bg-black border border-white/10 rounded-r-md text-zinc-400 hover:text-white transition-colors',
+          isProxyTab && 'hidden',
+        )}
         style={{ left: isSidebarOpen ? '16rem' : '0' }}
       >
         {isSidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}

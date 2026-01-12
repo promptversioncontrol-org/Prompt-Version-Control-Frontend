@@ -13,6 +13,10 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
   }),
+  trustedOrigins: [
+    'http://localhost:3000',
+    'https://rewards-richards-classic-donor.trycloudflare.com',
+  ],
 
   socialProviders: {
     github: {
@@ -38,6 +42,11 @@ export const auth = betterAuth({
       plan: {
         type: 'string',
         required: false,
+      },
+      role: {
+        type: 'string',
+        required: false,
+        defaultValue: 'user',
       },
     },
   },

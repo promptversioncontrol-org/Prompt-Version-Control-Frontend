@@ -2,7 +2,6 @@ import { auth } from '@/shared/lib/auth';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { getOrganizationBySlug } from '@/features/organizations/services/get-organization-by-slug';
-import { OrganizationHeader } from '@/features/organizations/components/organization-header';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -50,16 +49,10 @@ export default async function OrganizationLayout({
   const currentMember = organization.members.find(
     (m) => m.userId === session.user.id,
   );
-  const userRole = currentMember?.role || 'member';
 
   return (
     <div className="flex flex-col min-h-screen">
-      <div className="border-b">
-        <div className="container mx-auto py-6">
-          <OrganizationHeader organization={organization} userRole={userRole} />
-        </div>
-      </div>
-      <div className="container mx-auto py-8">{children}</div>
+      <div className="flex-1">{children}</div>
     </div>
   );
 }

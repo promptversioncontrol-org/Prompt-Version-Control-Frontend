@@ -1,418 +1,308 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
   Check,
-  Users,
-  Cpu,
-  Terminal,
   ArrowRight,
-  Lock,
-  Activity,
-  Layers,
+  Terminal,
+  Cpu,
   Zap,
-  Download,
-  Server,
   ShieldCheck,
+  Server,
+  Layers,
+  Activity,
+  Globe,
+  Code,
+  Lock,
+  Book,
   ChevronsDown,
+  Copy,
+  Download,
 } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArchitectureSection } from './architecture-section';
-import { IntegrationCard } from './integration-card';
+import { Navbar } from '@/shared/components/navbar';
 import { Pricing2 } from '@/shared/components/ui/pricing-cards';
+import { Button } from '@/shared/components/ui/button';
+
+// --- Typewriter Effect (Stable) ---
+const TypewriterText = ({ text }: { text: string }) => {
+  const [displayText, setDisplayText] = useState('');
+
+  useEffect(() => {
+    setDisplayText('');
+    let i = 0;
+    const timer = setInterval(() => {
+      if (i <= text.length) {
+        setDisplayText(text.slice(0, i));
+        i++;
+      } else {
+        clearInterval(timer);
+      }
+    }, 40);
+    return () => clearInterval(timer);
+  }, [text]);
+
+  return (
+    <span className="font-mono text-zinc-300 whitespace-nowrap">
+      {displayText}
+      <span className="animate-pulse text-white inline-block ml-0.5">_</span>
+    </span>
+  );
+};
 
 export const LandingPage = () => {
+  // --- Animation Hooks ---
+  const { scrollY } = useScroll();
+  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+  const scale = useTransform(scrollY, [0, 300], [1, 0.95]);
+
+  // --- Proxy Installer Logic ---
+  const [installMethod, setInstallMethod] = useState<'curl' | 'wget'>('curl');
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const downloadUrl = `${appUrl}/downloads/PVC_Proxy_Setup_v1.0.exe`;
+
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-white selection:text-black overflow-x-hidden relative">
-      {/* Background Ambient Noise/Gradient (Subtle) */}
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-zinc-800 selection:text-white overflow-x-hidden relative">
+      {/* Background - Clean, Subtle Noise */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[20%] w-[500px] h-[500px] bg-white opacity-[0.03] blur-[120px] rounded-full"></div>
-        <div className="absolute bottom-[-10%] right-[10%] w-[400px] h-[400px] bg-gray-500 opacity-[0.05] blur-[100px] rounded-full"></div>
-        {/* Grid Pattern */}
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+        <div className="absolute top-[-20%] left-[50%] -translate-x-1/2 w-[1000px] h-[800px] bg-white/[0.03] blur-[150px] rounded-full"></div>
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light"></div>
       </div>
 
-      {/* Navbar */}
-      <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/50 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {/* Logo from public/icon/logo.svg */}
-            <Image
-              src="/icon/logo.svg"
-              alt="PVC"
-              width={48}
-              height={48}
-              className="w-12 h-12"
-            />
-            <span className="font-semibold tracking-tight text-lg">PVC</span>
-          </div>
+      <Navbar />
 
-          <div className="hidden md:flex gap-8 text-sm font-medium text-gray-400">
-            <Link href="/docs" className="hover:text-white transition-colors">
-              Docs
-            </Link>
-            <a href="#features" className="hover:text-white transition-colors">
-              Features
-            </a>
-            <a
-              href="#integrations"
-              className="hover:text-white transition-colors"
-            >
-              Integrations
-            </a>
-            <a href="#pricing" className="hover:text-white transition-colors">
-              Pricing
-            </a>
-          </div>
-
-          <div className="flex gap-4">
-            <Link
-              href="/sign-in"
-              className="text-sm font-medium text-gray-300 hover:text-white transition-colors flex items-center"
-            >
-              Log In
-            </Link>
-            <button className="px-4 py-2 bg-white text-black text-sm font-semibold rounded hover:bg-gray-200 transition-all shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-              Get Started
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="relative z-10 pt-32 pb-24 px-6 text-center max-w-5xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-xs text-gray-300 mb-8 hover:border-white/20 transition-colors cursor-default">
-          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-          Now supporting Codex AI Agents
-        </div>
-
-        <div className="flex justify-center mb-8 perspective-800">
+      {/* --- HERO SECTION --- */}
+      <section className="relative z-10 pt-24 pb-32 px-6 text-center max-w-6xl mx-auto min-h-screen flex flex-col justify-center">
+        {/* Spinning Logo */}
+        <motion.div
+          style={{ opacity, scale }}
+          className="flex justify-center mb-12 perspective-1000"
+        >
           <Image
             src="/icon/logo.svg"
             alt="PVC Logo"
-            width={180}
-            height={180}
-            className="drop-shadow-[0_0_35px_rgba(255,255,255,0.3)] logo-spin-3d"
+            width={160}
+            height={160}
+            className="drop-shadow-[0_0_50px_rgba(255,255,255,0.15)] logo-spin-3d grayscale hover:grayscale-0 transition-all duration-700"
           />
-        </div>
+        </motion.div>
+
+        {/* Terminal Badge */}
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="mx-auto mb-8 bg-black/50 border border-zinc-800 rounded-full px-5 py-2 flex items-center gap-4 w-fit max-w-[90vw] backdrop-blur-md shadow-lg shadow-zinc-900/50"
+        >
+          <div className="flex gap-1.5 shrink-0">
+            <div className="w-2.5 h-2.5 rounded-full bg-zinc-700 border border-zinc-600" />
+            <div className="w-2.5 h-2.5 rounded-full bg-zinc-700 border border-zinc-600" />
+            <div className="w-2.5 h-2.5 rounded-full bg-zinc-500 border border-zinc-400" />
+          </div>
+          <div className="text-xs sm:text-sm text-zinc-500 font-mono flex items-center gap-2 border-l border-zinc-800 pl-4 overflow-x-auto no-scrollbar">
+            <span className="text-zinc-600 shrink-0">$</span>
+            <TypewriterText text="npm install -g @adam903/pvc" />
+          </div>
+        </motion.div>
 
         <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="text-5xl md:text-7xl font-bold tracking-tighter mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-500"
+          style={{ scale }}
+          className="text-6xl md:text-8xl font-bold tracking-tighter mb-8 bg-clip-text text-transparent bg-gradient-to-b from-white via-zinc-200 to-zinc-600 leading-[1.1]"
         >
-          Total Observability for
-          <br />
-          Your AI Workflow.
+          The Firewall for <br />
+          <span className="text-white">Artificial Intelligence</span>
         </motion.h1>
 
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-          className="text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed"
+          style={{ opacity }}
+          className="text-xl md:text-2xl text-zinc-400 max-w-3xl mx-auto mb-12 leading-relaxed"
         >
-          The glass wall between your data and external AI. Monitor prompts,
-          detect leaks, and enforce policies across your entire organization.
+          Stop sensitive data leaks before they leave your terminal. Real-time
+          observability and policy enforcement.
         </motion.p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
-          className="flex flex-col sm:flex-row justify-center gap-4 mb-16"
-        >
-          <button
-            type="button"
-            className="px-8 py-4 bg-white text-black font-semibold rounded-lg hover:scale-105 transition-transform flex items-center justify-center gap-2"
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-24">
+          <Link
+            href="/sign-up"
+            className="group relative px-8 py-4 bg-white text-black font-bold rounded-xl overflow-hidden hover:bg-zinc-200 transition-colors"
           >
-            Install PVC <ArrowRight size={18} />
-          </button>
+            <span className="relative flex items-center gap-2">
+              Start Protecting{' '}
+              <ArrowRight
+                size={18}
+                className="group-hover:translate-x-1 transition-transform"
+              />
+            </span>
+          </Link>
+
           <Link
             href="/docs"
-            className="px-8 py-4 bg-white/5 border border-white/10 text-white font-medium rounded-lg backdrop-blur-md hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
+            className="px-8 py-4 bg-black border border-zinc-800 text-white font-medium rounded-xl hover:bg-zinc-900 hover:border-zinc-700 transition-all flex items-center gap-2"
           >
-            <Terminal size={18} /> View Documentation
+            <Book size={18} className="text-zinc-500" />
+            Documentation
           </Link>
-        </motion.div>
 
-        {/* Hero Visual: The "Glass Prism" Dashboard Preview */}
-        <div className="relative mx-auto max-w-4xl perspective-1000">
-          <motion.div
-            initial={{ opacity: 0, rotateX: 20, scale: 0.9 }}
-            animate={{ opacity: 1, rotateX: 12, scale: 1 }}
-            transition={{ duration: 1, delay: 0.6, ease: 'easeOut' }}
-            className="relative bg-black/40 border border-white/10 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md transform hover:rotate-0 transition-transform duration-700 ease-out p-1"
+          <Link
+            href="/demo"
+            className="px-8 py-4 bg-black border border-zinc-800 text-white font-medium rounded-xl hover:bg-zinc-900 hover:border-zinc-700 transition-all flex items-center gap-2"
           >
-            {/* Window Controls */}
-            <div className="h-8 bg-white/5 border-b border-white/5 flex items-center px-4 gap-2">
-              <div className="w-3 h-3 rounded-full bg-white/20"></div>
-              <div className="w-3 h-3 rounded-full bg-white/20"></div>
+            <Terminal size={18} className="text-zinc-500" />
+            Live Demo
+          </Link>
+        </div>
+
+        {/* 3D Tilt Card - Dashboard Preview */}
+        <TiltCard>
+          <div className="relative rounded-xl overflow-hidden border border-zinc-800 shadow-[0_0_50px_-10px_rgba(255,255,255,0.05)] bg-black mx-auto max-w-full">
+            {/* Fake UI Header */}
+            <div className="h-8 md:h-10 bg-zinc-950 border-b border-zinc-800 flex items-center px-3 md:px-4 justify-between">
+              <div className="flex gap-1.5 md:gap-2">
+                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-zinc-800" />
+                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-zinc-800" />
+              </div>
+              <div className="text-[10px] md:text-xs text-zinc-600 font-mono truncate ml-2">
+                dashboard.pvc.dev
+              </div>
             </div>
 
-            {/* Glass Dashboard UI */}
-            <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Sidebar */}
-              <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                  <div className="text-xs text-gray-500 uppercase tracking-widest mb-2">
-                    Team Risk Score
-                  </div>
-                  <div className="text-3xl font-mono text-white">
-                    98<span className="text-gray-600">/100</span>
-                  </div>
+            {/* Fake UI Content */}
+            <div className="flex flex-col md:grid md:grid-cols-12 gap-px bg-zinc-800/50">
+              {/* Sidebar - Hidden on Mobile */}
+              <div className="hidden md:block md:col-span-3 bg-black p-6 space-y-6">
+                <div className="space-y-2">
+                  <div className="h-2 w-12 bg-zinc-900 rounded" />
+                  <div className="h-2 w-20 bg-zinc-900 rounded" />
                 </div>
-                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                  <div className="text-xs text-gray-500 uppercase tracking-widest mb-2">
-                    Leaks Prevented
+                <div className="space-y-4 pt-6">
+                  <div className="flex items-center gap-3 text-zinc-400 text-sm">
+                    <Activity size={14} /> Activity
                   </div>
-                  <div className="text-3xl font-mono text-white">12</div>
+                  <div className="flex items-center gap-3 text-white text-sm bg-zinc-900 border border-zinc-800 p-2 rounded">
+                    <ShieldCheck size={14} className="text-white" /> Policies
+                  </div>
+                  <div className="flex items-center gap-3 text-zinc-400 text-sm">
+                    <Layers size={14} /> Integrations
+                  </div>
                 </div>
               </div>
 
-              {/* Main Feed */}
-              <div className="col-span-2 bg-white/[0.02] rounded-lg border border-white/5 p-4 space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                  <span className="text-xs text-gray-400">Live Stream</span>
-                  <span className="text-[10px] px-2 py-0.5 bg-green-500/20 text-green-300 border border-green-500/30 rounded">
-                    Active
-                  </span>
-                </div>
-
-                {/* Item 1 */}
-                <div className="flex gap-3 items-start opacity-50">
-                  <div className="mt-1">
-                    <Check size={14} className="text-gray-500" />
-                  </div>
-                  <div className="text-xs font-mono text-gray-500">
-                    Refactor class User...
-                  </div>
-                </div>
-
-                {/* Item 2 (Blocked) */}
-                <div className="flex gap-3 items-center p-2 bg-white/5 border border-white/10 rounded backdrop-blur-sm">
-                  <div className="p-1 bg-white text-black rounded">
-                    <Lock size={12} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between text-[10px] text-gray-400 mb-1">
-                      <span>usr: dev.mike</span>
-                      <span>Tool: Codex</span>
+              {/* Main Content - Full Width on Mobile */}
+              <div className="w-full md:col-span-9 bg-black p-4 md:p-8">
+                <div className="flex justify-between items-end mb-6 md:mb-8">
+                  <div>
+                    <div className="text-xs md:text-sm text-zinc-500 mb-1">
+                      Threats Blocked (24h)
                     </div>
-                    <div className="text-xs font-mono text-white blur-[2px] hover:blur-0 transition-all cursor-pointer">
-                      AWS_SECRET_KEY = &quot;AKIA...&quot;
+                    <div className="text-3xl md:text-4xl font-mono text-white">
+                      1,248
                     </div>
                   </div>
-                  <div className="text-[10px] font-bold text-white border border-white/20 px-2 py-1 rounded">
-                    BLOCKED
+
+                  <div className="h-8 md:h-9 px-3 md:px-4 rounded border border-emerald-500/20 bg-emerald-500/5 flex items-center justify-center text-emerald-500 text-[10px] md:text-xs font-mono">
+                    System Stable
                   </div>
+                </div>
+
+                {/* Abstract Graph */}
+                <div className="h-32 md:h-48 flex items-end gap-1 md:gap-2 pb-4 border-b border-zinc-800">
+                  {[40, 65, 30, 80, 55, 90, 45, 60, 75, 50, 85, 95].map(
+                    (h, i) => (
+                      <div
+                        key={i}
+                        className="flex-1 bg-zinc-900 hover:bg-zinc-700 transition-colors rounded-t-sm relative group border-t border-zinc-800"
+                        style={{ height: `${h}%` }}
+                      ></div>
+                    ),
+                  )}
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
+        </TiltCard>
+      </section>
+
+      {/* Marquee Section */}
+      <section className="py-10 border-y border-zinc-800 bg-black overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 mb-6 text-center">
+          <span className="text-xs font-mono text-zinc-600 uppercase tracking-widest">
+            Trusted by engineering teams at
+          </span>
+        </div>
+        <div className="flex gap-16 animate-marquee whitespace-nowrap opacity-40 grayscale hover:grayscale-0 hover:opacity-80 transition-all duration-500">
+          {[
+            'Acme Corp',
+            'Globex',
+            'Soylent',
+            'Initech',
+            'Umbrella',
+            'Cyberdyne',
+            'Massive Dynamic',
+          ].map((company, i) => (
+            <div
+              key={i}
+              className="text-xl font-bold text-zinc-300 flex items-center gap-2"
+            >
+              <div className="w-6 h-6 bg-zinc-800 rounded-full" /> {company}
+            </div>
+          ))}
+          {[
+            'Acme Corp',
+            'Globex',
+            'Soylent',
+            'Initech',
+            'Umbrella',
+            'Cyberdyne',
+            'Massive Dynamic',
+          ].map((company, i) => (
+            <div
+              key={`dup-${i}`}
+              className="text-xl font-bold text-zinc-300 flex items-center gap-2"
+            >
+              <div className="w-6 h-6 bg-zinc-800 rounded-full" /> {company}
+            </div>
+          ))}
         </div>
       </section>
 
       <ArchitectureSection />
 
-      {/* Integrations - "The Ecosystem" */}
-      <section
-        id="integrations"
-        className="py-24 border-t border-white/10 relative z-10"
-      >
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-2xl font-semibold mb-4"
-            >
-              Protecting your team wherever they work
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-gray-500"
-            >
-              Compatible with the tools you already use.
-            </motion.p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <IntegrationCard
-              name="Codex AI"
-              status="Active"
-              icon={<Cpu />}
-              active
-            />
-            <IntegrationCard
-              name="Cursor"
-              status="Coming Q4"
-              icon={<Terminal />}
-            />
-            <IntegrationCard
-              name="Claude CLI"
-              status="Planned"
-              icon={<Terminal />}
-            />
-            <IntegrationCard
-              name="Antigravity"
-              status="Planned"
-              icon={<Zap />}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section
-        id="features"
-        className="py-24 px-6 max-w-7xl mx-auto relative z-10"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Feature 1: BYOM */}
-          <SpotlightCard className="lg:col-span-2" delay={0.1}>
-            <div className="w-12 h-12 bg-white text-black rounded-lg flex items-center justify-center mb-6">
-              <Layers size={24} />
-            </div>
-            <h3 className="text-2xl font-bold mb-3">Hybrid Analysis Engine</h3>
-            <p className="text-gray-400 mb-6 max-w-lg">
-              Don&apos;t want to send your prompts to another cloud for
-              verification? Switch to our{' '}
-              <strong>Open Source Local Model</strong>. PVC runs the analysis on
-              your infrastructure, ensuring zero data egress.
-            </p>
-
-            {/* Visual Toggle */}
-            <div className="flex items-center gap-4 p-4 bg-black/40 rounded-lg border border-white/5 max-w-md">
-              <div className="text-xs font-mono text-gray-500">
-                ANALYSIS_MODE:
-              </div>
-              <div className="flex bg-white/10 rounded p-1">
-                <div className="px-3 py-1 text-xs text-gray-500">Cloud</div>
-                <div className="px-3 py-1 text-xs bg-white text-black rounded shadow font-bold">
-                  Local (OSS)
-                </div>
-              </div>
-              <div className="text-xs text-green-400 flex items-center gap-1">
-                <Check size={10} /> Private
-              </div>
-            </div>
-          </SpotlightCard>
-
-          {/* Feature 2: Workspaces */}
-          <SpotlightCard delay={0.2}>
-            <div className="w-12 h-12 bg-gray-800 text-white rounded-lg flex items-center justify-center mb-6 border border-white/20">
-              <Users size={24} />
-            </div>
-            <h3 className="text-xl font-bold mb-3">Team Workspaces</h3>
-            <p className="text-gray-400">
-              Invite your engineering, legal, and security teams. Segregate
-              projects by access level.
-            </p>
-            <div className="mt-6 flex -space-x-2">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="w-8 h-8 rounded-full bg-gray-700 border border-black flex items-center justify-center text-[10px] text-white"
-                >
-                  User
-                </div>
-              ))}
-              <div className="w-8 h-8 rounded-full bg-white text-black border border-black flex items-center justify-center text-[10px] font-bold">
-                +5
-              </div>
-            </div>
-          </SpotlightCard>
-
-          {/* Feature 3: Real-time */}
-          <SpotlightCard delay={0.3}>
-            <div className="w-12 h-12 bg-gray-800 text-white rounded-lg flex items-center justify-center mb-6 border border-white/20">
-              <Activity size={24} />
-            </div>
-            <h3 className="text-xl font-bold mb-3">Real-time Intervention</h3>
-            <p className="text-gray-400">
-              We don&apos;t just log leaks; we stop them. PVC sits at the
-              network layer to block requests before they leave the device.
-            </p>
-          </SpotlightCard>
-
-          {/* Feature 4: Policy */}
-          <SpotlightCard
-            className="lg:col-span-2 flex flex-col md:flex-row items-center gap-8"
-            delay={0.4}
-          >
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold mb-3">Custom Policy Engine</h3>
-              <p className="text-gray-400">
-                Define what &quot;Sensitive&quot; means to you. Use Regex,
-                Keyword lists, or semantic matching to catch proprietary code or
-                customer PII.
-              </p>
-            </div>
-            <div className="w-full md:w-1/3 bg-black/50 border border-white/10 rounded-lg p-4 font-mono text-xs">
-              <div className="text-green-400 mb-2">{'// policy.yaml'}</div>
-              <div className="text-purple-400">rules:</div>
-              <div className="pl-4 text-gray-300">
-                - type: <span className="text-white">API_KEY</span>
-              </div>
-              <div className="pl-4 text-gray-300">
-                {' '}
-                action: <span className="text-red-400">BLOCK</span>
-              </div>
-              <div className="pl-4 text-gray-300">
-                - type: <span className="text-white">INTERNAL_URL</span>
-              </div>
-              <div className="pl-4 text-gray-300">
-                {' '}
-                action: <span className="text-yellow-400">WARN</span>
-              </div>
-            </div>
-          </SpotlightCard>
-        </div>
-      </section>
-
-      {/* PVC Proxy Download Section */}
+      {/* --- PVC PROXY INSTALLER SECTION (Merged from feature/docs) --- */}
       <section
         id="proxy"
-        className="py-24 relative z-10 border-t border-white/10"
+        className="py-24 relative z-10 border-t border-zinc-900"
       >
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-white/5 blur-[120px] rounded-full pointer-events-none"></div>
 
         <div className="max-w-7xl mx-auto px-6 text-center space-y-8">
           <div className="relative z-10 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-black/50 backdrop-blur-md mb-4">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <span className="text-xs font-medium text-zinc-300">
                 Latest Release: v1.0.0
               </span>
             </div>
 
-            <h2 className="text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-zinc-200 to-zinc-500 drop-shadow-[0_0_25px_rgba(255,255,255,0.2)]">
+            <h2 className="text-5xl font-black tracking-tighter text-white">
               PVC Proxy
             </h2>
             <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
               Secure, observable, and policy-compliant AI request handling for
-              your entire organization. Install the local proxy to gain full
-              control.
+              your entire organization.
             </p>
           </div>
 
+          {/* Download Button */}
           <div className="flex justify-center pt-6">
             <a href="/downloads/PVC_Proxy_Setup_v1.0.exe" download>
               <Button
                 size="lg"
-                className="h-14 px-8 text-base bg-white text-black hover:bg-zinc-200 shadow-[0_0_30px_-5px_rgba(255,255,255,0.4)] transition-all hover:scale-105 group"
+                className="h-14 px-8 text-base bg-white text-black hover:bg-zinc-200 transition-all hover:scale-105 group border-0 font-semibold"
               >
                 <Download className="mr-2 h-5 w-5 group-hover:animate-bounce" />
                 Download Windows Installer
@@ -420,6 +310,61 @@ export const LandingPage = () => {
             </a>
           </div>
 
+          {/* CLI Install Box */}
+          <div className="max-w-lg mx-auto mt-8">
+            <div className="flex items-center justify-center gap-6 mb-3 text-xs font-mono">
+              <button
+                onClick={() => setInstallMethod('curl')}
+                className={`transition-colors ${
+                  installMethod === 'curl'
+                    ? 'text-white font-bold'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                cURL
+              </button>
+              <button
+                onClick={() => setInstallMethod('wget')}
+                className={`transition-colors ${
+                  installMethod === 'wget'
+                    ? 'text-white font-bold'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                wget
+              </button>
+            </div>
+
+            <div className="relative group mx-auto bg-black border border-zinc-800 rounded-lg p-4 font-mono text-sm text-left flex items-center justify-between hover:border-zinc-700 transition-colors backdrop-blur-md">
+              <div className="overflow-x-auto whitespace-nowrap scrollbar-none text-zinc-300 pr-8">
+                {installMethod === 'curl' ? (
+                  <>
+                    <span className="text-purple-400">curl</span> -O{' '}
+                    {downloadUrl}
+                  </>
+                ) : (
+                  <>
+                    <span className="text-yellow-400">wget</span> {downloadUrl}
+                  </>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  const cmd =
+                    installMethod === 'curl'
+                      ? `curl -O ${downloadUrl}`
+                      : `wget ${downloadUrl}`;
+                  navigator.clipboard.writeText(cmd);
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                title="Copy command"
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Proxy Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-12 max-w-4xl mx-auto text-left">
             {[
               {
@@ -440,9 +385,9 @@ export const LandingPage = () => {
             ].map((feature, i) => (
               <div
                 key={i}
-                className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors"
+                className="p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800 backdrop-blur-sm hover:bg-zinc-900/50 transition-colors"
               >
-                <feature.icon className="h-8 w-8 text-zinc-300 mb-4" />
+                <feature.icon className="h-8 w-8 text-zinc-400 mb-4" />
                 <h3 className="text-lg font-bold text-white mb-2">
                   {feature.title}
                 </h3>
@@ -452,184 +397,237 @@ export const LandingPage = () => {
               </div>
             ))}
           </div>
-
-          {/* Version History Table */}
-          <div className="max-w-4xl mx-auto mt-16 text-left">
-            <h3 className="text-xl font-bold text-white flex items-center gap-3 mb-6">
-              <Server className="w-5 h-5 text-zinc-500" />
-              Release History
-            </h3>
-
-            <div className="rounded-xl border border-white/10 bg-black/40 overflow-hidden">
-              <div className="grid grid-cols-12 gap-4 p-4 border-b border-white/10 bg-white/5 text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                <div className="col-span-3">Version</div>
-                <div className="col-span-3">Release Date</div>
-                <div className="col-span-4">Platform</div>
-                <div className="col-span-2 text-right">Action</div>
-              </div>
-
-              <div className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-white/5 transition-colors group">
-                <div className="col-span-3 font-mono text-white font-medium">
-                  v1.0.0
-                </div>
-                <div className="col-span-3 text-zinc-400">Dec 25, 2025</div>
-                <div className="col-span-4 text-zinc-400 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-blue-500"></span>{' '}
-                  Windows (x64)
-                </div>
-                <div className="col-span-2 text-right">
-                  <a
-                    href="/downloads/PVC_Proxy_Setup_v1.0.exe"
-                    download
-                    className="text-sm font-medium text-white hover:underline decoration-zinc-500 underline-offset-4 flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity"
-                  >
-                    Download
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <div id="pricing">
+      {/* Features Grid (Bento) */}
+      <section className="py-32 px-6 max-w-7xl mx-auto">
+        <div className="mb-20 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+            Defense in Depth
+          </h2>
+          <p className="text-zinc-400 max-w-2xl mx-auto text-lg">
+            A complete security suite designed for the generative AI era.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[minmax(300px,auto)]">
+          <BentoCard className="md:col-span-2 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-zinc-800/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            <div className="relative z-10 h-full flex flex-col justify-between">
+              <div className="p-8">
+                <div className="w-12 h-12 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-center mb-6 text-white">
+                  <Code size={24} />
+                </div>
+                <h3 className="text-2xl font-bold mb-3 text-white">
+                  Hybrid Analysis Engine
+                </h3>
+                <p className="text-zinc-400 max-w-sm">
+                  Switch between Cloud and Local (OSS) analysis models
+                  instantly. Keep your PII on-premise.
+                </p>
+              </div>
+              <div className="px-8 pb-8">
+                <div className="bg-black border border-zinc-800 rounded-lg p-5 font-mono text-xs text-zinc-400 shadow-xl">
+                  <div className="flex justify-between items-center border-b border-zinc-800 pb-3 mb-3">
+                    <span>engine_config.json</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span className="text-emerald-500">Live</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div>
+                      &quot;mode&quot;:{' '}
+                      <span className="text-white">
+                        &quot;local_strict&quot;
+                      </span>
+                      ,
+                    </div>
+                    <div>
+                      &quot;model&quot;:{' '}
+                      <span className="text-white">
+                        &quot;pvc-nano-v2&quot;
+                      </span>
+                      ,
+                    </div>
+                    <div>
+                      &quot;latency_budget&quot;:{' '}
+                      <span className="text-white">&quot;20ms&quot;</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </BentoCard>
+
+          <BentoCard className="md:row-span-2">
+            <div className="p-8 h-full flex flex-col">
+              <div className="w-12 h-12 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-center mb-6 text-white">
+                <Globe size={24} />
+              </div>
+              <h3 className="text-2xl font-bold mb-3 text-white">
+                Global Edge
+              </h3>
+              <p className="text-zinc-400 mb-8">
+                Deployed across 35 regions for sub-10ms latency overhead.
+              </p>
+              <div className="flex-1 relative">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05),transparent)]" />
+                <div className="grid grid-cols-4 gap-4 opacity-20 mt-8">
+                  {[...Array(12)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="aspect-square rounded-full bg-zinc-600 animate-pulse"
+                      style={{ animationDelay: `${i * 0.1}s` }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </BentoCard>
+
+          <BentoCard>
+            <div className="p-8">
+              <div className="w-12 h-12 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-center mb-6 text-white">
+                <Zap size={24} />
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-white">
+                Zero Friction
+              </h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">
+                Drop-in replacement for OpenAI SDKs. Change one line of code and
+                you are protected.
+              </p>
+            </div>
+          </BentoCard>
+
+          <BentoCard>
+            <div className="p-8">
+              <div className="w-12 h-12 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-center mb-6 text-white">
+                <ShieldCheck size={24} />
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-white">
+                PII Redaction
+              </h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">
+                Automatically detect and mask emails, keys, and credit cards
+                before they leave localhost.
+              </p>
+            </div>
+          </BentoCard>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section className="py-24 border-t border-zinc-900 bg-black" id="pricing">
         <Pricing2
           heading="Transparent Pricing"
-          description="Choose how you want to analyze your data."
+          description="Start for free, scale with security."
           plans={[
             {
               id: 'starter',
-              name: 'Starter',
-              description: 'For individuals and hobbyists.',
+              name: 'Developer',
+              description: 'For individuals building locally.',
               monthlyPrice: '$0',
               yearlyPrice: '$0',
               features: [
-                { text: '1 User' },
-                { text: 'Basic Pattern Matching (Regex)' },
-                { text: '3 Days Log Retention' },
-                { text: 'Community Support' },
+                { text: 'Local Proxy' },
+                { text: 'Basic Pattern Matching' },
+                { text: '3 Days Retention' },
               ],
-              button: {
-                text: 'Get Started',
-                url: '/sign-up',
-              },
+              button: { text: 'Install CLI', url: '/docs' },
             },
             {
               id: 'pro',
-              name: 'Pro Team',
-              description: 'For teams requiring privacy-first analysis.',
-              monthlyPrice: '$39',
-              yearlyPrice: '$29',
+              name: 'Team',
+              description: 'For startups and small teams.',
+              monthlyPrice: '$49',
+              yearlyPrice: '$39',
               features: [
-                { text: 'Unlimited Workspaces' },
-                { text: 'Nano OSS Model (Local Analysis)' },
-                { text: 'Bring Your Own Key (OpenAI/Anthropic)' },
-                { text: '30 Days Log Retention' },
-                { text: 'Priority Support' },
+                { text: 'Unified Dashboard' },
+                { text: 'Custom Policies' },
+                { text: 'Slack Alerts' },
+                { text: '30 Days Retention' },
               ],
-              button: {
-                text: 'Start Pro Trial',
-                url: '/sign-up?plan=pro',
-              },
+              button: { text: 'Start Trial', url: '/signup' },
             },
             {
               id: 'enterprise',
               name: 'Enterprise',
-              description:
-                'For large organizations with strict compliance needs.',
+              description: 'For compliance-focused organizations.',
               monthlyPrice: 'Custom',
               yearlyPrice: 'Custom',
               features: [
-                { text: 'Unlimited Seats' },
-                { text: 'Custom Fine-tuned Analysis Models' },
-                { text: 'SSO & SAML' },
-                { text: 'Audit Logs Export' },
-                { text: 'Dedicated Success Manager' },
+                { text: 'SSO / SAML' },
+                { text: 'VPC Peering' },
+                { text: 'Audit Logs API' },
+                { text: 'Dedicated Support' },
               ],
-              button: {
-                text: 'Contact Sales',
-                url: '/contact',
-              },
+              button: { text: 'Contact Sales', url: '/contact' },
             },
           ]}
         />
-      </div>
+      </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-white/10 text-center text-gray-500 text-sm relative z-10 bg-black">
-        <div className="flex justify-center gap-6 mb-8">
-          <Link href="/docs" className="hover:text-white transition-colors">
-            Documentation
-          </Link>
-          <a
-            href="https://github.com/promptversioncontrol-org"
-            target="_blank"
-            className="hover:text-white transition-colors"
-          >
-            GitHub
-          </a>
-          <a href="#" className="hover:text-white transition-colors">
-            Privacy Policy
-          </a>
-          <a href="#" className="hover:text-white transition-colors">
-            Terms
-          </a>
+      <footer className="border-t border-zinc-900 bg-black py-12 text-center">
+        <div className="flex items-center justify-center gap-2 mb-8 opacity-50 hover:opacity-100 transition-opacity">
+          <Image
+            src="/icon/logo.svg"
+            alt="Logo"
+            width={24}
+            height={24}
+            className="grayscale"
+          />
+          <span className="font-bold text-white">PVC</span>
         </div>
-        <p>
-          &copy; {new Date().getFullYear()} PVC. Built for the safe AI future.
-        </p>
+        <div className="text-zinc-600 text-sm">
+          &copy; 2025 Prompt Version Control Inc.
+        </div>
       </footer>
+
+      <style jsx global>{`
+        @keyframes marquee {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+        .animate-marquee {
+          animation: marquee 30s linear infinite;
+        }
+      `}</style>
     </div>
   );
 };
 
-interface SpotlightCardProps {
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
-}
+// --- Helper Components ---
 
-const SpotlightCard = ({
-  children,
-  className = '',
-  delay = 0,
-}: SpotlightCardProps) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [opacity, setOpacity] = useState(0);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-  };
-
-  const handleMouseEnter = () => {
-    setOpacity(1);
-  };
-
-  const handleMouseLeave = () => {
-    setOpacity(0);
-  };
-
+const TiltCard = ({ children }: { children: React.ReactNode }) => {
+  const x = useTransform(useScroll().scrollY, [0, 500], [0, 5]);
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay }}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className={`relative p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl overflow-hidden transition-colors ${className}`}
+      style={{ rotateX: x }}
+      className="perspective-1000 transform-gpu transition-all duration-500 hover:scale-[1.01]"
     >
-      <div
-        className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300"
-        style={{
-          opacity,
-          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(255,255,255,0.1), transparent 40%)`,
-        }}
-      />
-      <div className="relative z-10">{children}</div>
+      {children}
     </motion.div>
   );
 };
+
+const BentoCard = ({
+  children,
+  className = '',
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => (
+  <div
+    className={`bg-black border border-zinc-800 rounded-3xl hover:border-zinc-600 transition-colors backdrop-blur-sm ${className}`}
+  >
+    {children}
+  </div>
+);

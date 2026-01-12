@@ -4,6 +4,31 @@ import type { NextRequest } from 'next/server';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'https://rewards-richards-classic-donor.trycloudflare.com',
+  ];
+
+  const origin = request.headers.get('origin');
+
+  // Handle OPTIONS method
+  if (request.method === 'OPTIONS') {
+    const response = new NextResponse(null, { status: 200 });
+    if (origin && allowedOrigins.includes(origin)) {
+      response.headers.set('Access-Control-Allow-Origin', origin);
+      response.headers.set(
+        'Access-Control-Allow-Methods',
+        'GET, POST, PUT, DELETE, OPTIONS, PATCH',
+      );
+      response.headers.set(
+        'Access-Control-Allow-Headers',
+        'Content-Type, Authorization, X-Requested-With',
+      );
+      response.headers.set('Access-Control-Allow-Credentials', 'true');
+    }
+    return response;
+  }
+
   // Define public routes that don't require authentication
   const publicRoutes = ['/', '/sign-in', '/sign-up', '/docs'];
 
@@ -30,7 +55,8 @@ export async function middleware(request: NextRequest) {
   // 2. If user is NOT authenticated
   else {
     // Redirect to sign-in if trying to access a protected route
-    if (!isPublicRoute) {
+    // Skip redirect for API routes to avoid returning HTML to API clients
+    if (!isPublicRoute && !pathname.startsWith('/api')) {
       // Create the redirect URL
       const url = new URL('/sign-in', request.url);
       // Optional: Add callback URL to redirect back after login
@@ -39,12 +65,28 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+
+  // Apply CORS headers to the response
+  if (origin && allowedOrigins.includes(origin)) {
+    response.headers.set('Access-Control-Allow-Origin', origin);
+    response.headers.set(
+      'Access-Control-Allow-Methods',
+      'GET, POST, PUT, DELETE, OPTIONS, PATCH',
+    );
+    response.headers.set(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization, X-Requested-With',
+    );
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+  }
+
+  return response;
 }
 
 export const config = {
   matcher: [
     // Skip Next.js internals and all static files, unless found in search params
-    '/((?!api|_next/static|_next/image|favicon.ico|icon|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|icon|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
