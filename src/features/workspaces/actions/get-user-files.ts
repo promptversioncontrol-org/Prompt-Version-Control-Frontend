@@ -29,7 +29,7 @@ export async function getUserFiles({
   // Base path: pvc/workspaces/{workspaceId}/{userId}/
   // Ensure trailing slash for root prefix
   const rootPath = `pvc/workspaces/${workspaceId}/${userId}/`;
-  
+
   // Full prefix to search: rootPath + requested sub-path
   // If prefix is provided, it should correspond to relative path from rootPath
   // e.g. prefix="2025-12-08/" -> full search: pvc/workspaces/.../.../2025-12-08/
@@ -41,7 +41,7 @@ export async function getUserFiles({
         Bucket: bucket,
         Prefix: searchPrefix,
         Delimiter: '/',
-      })
+      }),
     );
 
     const items: FileBrowserItem[] = [];
@@ -55,7 +55,7 @@ export async function getUserFiles({
           const parts = cp.Prefix.split('/');
           // Last part is empty string due to trailing slash, so take second to last
           const folderName = parts[parts.length - 2];
-          
+
           items.push({
             id: cp.Prefix,
             name: folderName,

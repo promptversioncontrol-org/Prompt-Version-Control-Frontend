@@ -17,7 +17,7 @@ export async function getFileContent(key: string) {
     });
 
     const response = await s3Client.send(command);
-    
+
     // AWS SDK v3 returns body as a stream. We need to convert it to string.
     const str = await response.Body?.transformToString();
 

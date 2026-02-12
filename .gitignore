@@ -197,5 +197,7 @@ next-env.d.ts
 
 /generated/prisma
 /docs
+
+# pvc
 .pvc
 /.pvc

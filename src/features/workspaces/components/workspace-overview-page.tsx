@@ -47,7 +47,7 @@ export default async function WorkspaceOverviewPage({
         {/* HEADER SECTION */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-800/50">
           <div className="space-y-3">
-             <WorkspaceBreadcrumb workspaceSlug={workspace.slug} />
+            <WorkspaceBreadcrumb workspaceSlug={workspace.slug} />
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
                 {workspace.name}
@@ -153,11 +153,11 @@ export default async function WorkspaceOverviewPage({
               </TabsContent>
 
               <TabsContent value="users" className="mt-4">
-                 <WorkspaceUsersList 
-                    contributors={workspace.contributors} 
-                    owner={workspace.user}
-                    workspaceSlug={workspace.slug}
-                 />
+                <WorkspaceUsersList
+                  contributors={workspace.contributors}
+                  owner={workspace.user}
+                  workspaceSlug={workspace.slug}
+                />
               </TabsContent>
             </Tabs>
           </div>

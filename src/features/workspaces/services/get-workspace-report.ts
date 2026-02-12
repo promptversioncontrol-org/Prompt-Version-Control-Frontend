@@ -1,10 +1,7 @@
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { s3Client } from '@/shared/lib/s3-client';
 
-export async function getWorkspaceReport(
-  workspaceId: string,
-  date: string,
-) {
+export async function getWorkspaceReport(workspaceId: string, date: string) {
   const bucket = process.env.AWS_BUCKET_NAME;
 
   if (!bucket) {

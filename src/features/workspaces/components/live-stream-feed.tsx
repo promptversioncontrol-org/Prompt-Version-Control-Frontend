@@ -15,13 +15,12 @@ import {
   Clock,
   Code2,
 } from 'lucide-react';
-import { sendTelegramNotification } from '../contracts/send-telegram-notification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/shared/lib/utils';
 
+// --- TYPES ---
 interface LiveStreamFeedProps {
   workspaceId: string;
-  workspaceSlug: string; // Możesz to zostawić jeśli używasz do linków, ale do socketa nie jest już potrzebne
   token?: string;
 }
 
@@ -50,20 +49,27 @@ const CRTOverlay = () => (
   />
 );
 
-// RADAR
+// 🔥 POPRAWIONY RADAR 🔥
 const RadarScanner = () => (
+  // Dodano min-h-[300px] aby zapewnić przestrzeń do centrowania
   <div className="flex flex-col items-center justify-center w-full min-h-[300px] relative overflow-hidden">
+    {/* Opcjonalnie: Tło glow pod radarem */}
     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] bg-emerald-500/5 rounded-full blur-3xl"></div>
 
     <div className="relative flex items-center justify-center">
+      {/* Zewnętrzny pierścień - Półkole (Góra + Prawa) */}
       <div
         className="absolute w-[200px] h-[200px] rounded-full border-[2px] border-transparent animate-[spin_3s_linear_infinite]"
         style={{
-          borderTopColor: '#10b981',
-          borderRightColor: 'rgba(16, 185, 129, 0.2)',
+          borderTopColor: '#10b981', // Pełny Emerald
+          borderRightColor: 'rgba(16, 185, 129, 0.2)', // Zanikający ogon
         }}
       ></div>
+
+      {/* Zewnętrzny pierścień - Cień (opcjonalnie, dla efektu głębi) */}
       <div className="absolute w-[200px] h-[200px] rounded-full border border-zinc-800/30"></div>
+
+      {/* Wewnętrzny pierścień - Półkole odwrotne (Dół + Lewa) */}
       <div
         className="absolute w-[140px] h-[140px] rounded-full border-[2px] border-transparent animate-[spin_4s_linear_infinite_reverse]"
         style={{
@@ -71,7 +77,11 @@ const RadarScanner = () => (
           borderLeftColor: 'rgba(16, 185, 129, 0.2)',
         }}
       ></div>
+
+      {/* Wewnętrzny pierścień - Cień */}
       <div className="absolute w-[140px] h-[140px] rounded-full border border-zinc-800/30"></div>
+
+      {/* Ikona w środku */}
       <div className="relative z-10 bg-[#09090b] p-4 rounded-full border border-zinc-800 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
         <ShieldCheck size={32} className="text-emerald-500" />
       </div>
@@ -141,8 +151,8 @@ const LogItem = ({ report }: { report: LeakReport }) => {
                 </span>
               </span>
             </div>
-            <span className="flex items-center gap-1.5 text-zinc-400 font-mono">
-              <Clock size={12} />
+            <span className="flex items-center gap-1.5 text-zinc-500 font-mono">
+              <Clock size={10} />
               {new Date(report.timestamp).toLocaleTimeString()}
             </span>
           </div>
@@ -181,11 +191,7 @@ const LogItem = ({ report }: { report: LeakReport }) => {
 
 // --- MAIN COMPONENT ---
 
-export function LiveStreamFeed({
-  workspaceId,
-  workspaceSlug,
-  token,
-}: LiveStreamFeedProps) {
+export function LiveStreamFeed({ workspaceId, token }: LiveStreamFeedProps) {
   const [reports, setReports] = useState<LeakReport[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -208,16 +214,7 @@ export function LiveStreamFeed({
     socket.on('disconnect', () => setIsConnected(false));
 
     socket.on('dashboard:leak_alert', (rawReport: Omit<LeakReport, 'id'>) => {
-      console.log('Frontend received leak alert:', rawReport);
       const report = { ...rawReport, id: crypto.randomUUID() };
-
-      sendTelegramNotification({
-        userId: workspaceId,
-        workspaceSlug: workspaceSlug,
-        event: report,
-      }).catch((err) =>
-        console.error('Failed to send telegram notification from client:', err),
-      );
 
       if (isPaused) {
         pendingReports.current.push(report);
@@ -304,9 +301,11 @@ export function LiveStreamFeed({
         </div>
       </div>
 
+      {/* Feed Area */}
       <div
         className={cn(
           'flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-zinc-950/50 z-10 relative',
+          // CENTROWANIE JEST TUTAJ
           isEmpty ? 'flex flex-col justify-center items-center' : 'space-y-3',
         )}
       >
@@ -326,6 +325,7 @@ export function LiveStreamFeed({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.3 }}
+              // Ważne: w-full żeby Flexbox rodzica dobrze pozycjonował
               className="w-full flex justify-center"
             >
               <RadarScanner />

@@ -20,8 +20,8 @@ function ReportContent() {
   return (
     <ReportViewer
       initialFileKey={fileKey}
-      workspaceSlug={workspaceSlug}
-      username={username}
+      workspaceSlug={params.workspaceSlug as string}
+      username={params.username as string}
     />
   );
 }

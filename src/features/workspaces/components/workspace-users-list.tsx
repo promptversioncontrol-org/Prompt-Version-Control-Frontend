@@ -1,7 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/shared/components/ui/avatar';
 import { Badge } from '@/shared/components/ui/badge';
 import {
   Table,
@@ -37,15 +41,19 @@ interface WorkspaceUsersListProps {
   workspaceSlug: string;
 }
 
-export function WorkspaceUsersList({ contributors, owner, workspaceSlug }: WorkspaceUsersListProps) {
+export function WorkspaceUsersList({
+  contributors,
+  owner,
+  workspaceSlug,
+}: WorkspaceUsersListProps) {
   // Combine owner and contributors for display, ensuring owner is first
   const allUsers = [
     {
       role: 'owner',
       addedAt: new Date(), // Owner "joined" at creation, but we don't have workspace createdAt passed here easily without prop drill. Using current date or could be omitted/handled better.
-      user: owner
+      user: owner,
     },
-    ...contributors
+    ...contributors,
   ];
 
   return (
@@ -89,12 +97,18 @@ export function WorkspaceUsersList({ contributors, owner, workspaceSlug }: Works
               <TableCell>
                 <div className="flex items-center gap-1.5">
                   {item.role === 'owner' ? (
-                    <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
+                    <Badge
+                      variant="outline"
+                      className="bg-amber-500/10 text-amber-500 border-amber-500/20"
+                    >
                       <Shield className="w-3 h-3 mr-1" />
                       Owner
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="bg-zinc-800 text-zinc-400 border-zinc-700">
+                    <Badge
+                      variant="outline"
+                      className="bg-zinc-800 text-zinc-400 border-zinc-700"
+                    >
                       <User className="w-3 h-3 mr-1" />
                       Member
                     </Badge>
@@ -102,7 +116,9 @@ export function WorkspaceUsersList({ contributors, owner, workspaceSlug }: Works
                 </div>
               </TableCell>
               <TableCell className="text-zinc-400 text-sm font-mono">
-                {item.role === 'owner' ? '-' : new Date(item.addedAt).toLocaleDateString()}
+                {item.role === 'owner'
+                  ? '-'
+                  : new Date(item.addedAt).toLocaleDateString()}
               </TableCell>
               <TableCell className="text-right">
                 <Link
@@ -115,11 +131,11 @@ export function WorkspaceUsersList({ contributors, owner, workspaceSlug }: Works
             </TableRow>
           ))}
           {allUsers.length === 0 && (
-             <TableRow>
-                <TableCell colSpan={4} className="text-center text-zinc-500 py-8">
-                   No users found.
-                </TableCell>
-             </TableRow>
+            <TableRow>
+              <TableCell colSpan={4} className="text-center text-zinc-500 py-8">
+                No users found.
+              </TableCell>
+            </TableRow>
           )}
         </TableBody>
       </Table>

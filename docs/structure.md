@@ -71,4 +71,52 @@ src/
 - `src/app/workspaces/new/page.tsx` → imports NewWorkspace from features/workspaces/components.
 - `src/shared/utils/slug.ts` → generic helper reused in multiple services.
 
-Follow these rules for all new routes/features so that `app/` stays a thin routing layer while domain logic and UI live in `features/` and shared utilities stay inside `shared/`.
+Follow these rules for all new routes/features so that `app/` stays a thin routing layer while domain logic and UI live in `features/` and shared utilities stay inside `shared/`. Use `dto/` for  dto 
+ japierdole tu masz przykłąd jak to ma wygladac contact/contracts/user.dto.ts - import { z } from 'zod';
+
+export const contactSchema = z.object({
+  title: z.string().min(3, { error: 'Title is required' }),
+  email: z.email({ error: 'Email is required' }),
+  content: z
+    .string()
+    .min(3, { error: 'Content is required' })
+    .max(150, { error: 'Max 150 characters' }),
+});
+
+export type ContactDto = z.infer<typeof contactSchema>;   contact/components/ContactForm.tsx - 'use client';
+
+import { Input } from '@/shared/components/Input';
+import { SubmitHandler, useForm } from 'react-hook-form';
+import { ContactDto, contactSchema } from '../contracts/contact.dto';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { sendContactEmail } from '../services/send-contact-email';
+
+export const ContactForm = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ContactDto>({
+    resolver: zodResolver(contactSchema),
+  });
+
+  const handleContactSubmit: SubmitHandler<ContactDto> = async (data) => {
+    console.log({ data });
+    const result = await sendContactEmail(data);
+    console.log({ result });
+    if (result.success) {
+      // success toast
+    } else {
+      // error toast
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(handleContactSubmit)}>
+      <Input label="Subject" {...register('title')} error={errors.title} />
+      <Input label="E-mail" {...register('email')} error={errors.email} />
+      <Input label="Content" {...register('content')} error={errors.content} />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}; to tylko przykąłd porsty jak ma dzilaac sturktura dto w moim projekcie

@@ -4,6 +4,7 @@ import { saveSecurityRules } from '@/features/workspaces/contracts/save-security
 import { getConnectedTelegram } from '@/features/workspaces/contracts/get-connected-telegram';
 import { prisma } from '@/shared/lib/prisma';
 import { notFound } from 'next/navigation';
+import { PlanType } from '@/features/billing/contracts/billing.dto';
 import {
   Tabs,
   TabsContent,
@@ -11,6 +12,8 @@ import {
   TabsTrigger,
 } from '@/shared/components/ui/tabs';
 import Link from 'next/link';
+
+import { InviteWorkspaceMemberForm } from '@/features/workspaces/components/invite-workspace-member-form';
 import {
   ChevronRight,
   LayoutGrid,
@@ -39,6 +42,7 @@ export default async function WorkspaceSettingsPage({
   const workspace = await prisma.workspace.findFirst({
     where: { slug: workspaceSlug },
     include: {
+      user: true, // Include creator for fallback
       securityRules: true,
       contributors: {
         include: {
@@ -51,6 +55,15 @@ export default async function WorkspaceSettingsPage({
   if (!workspace) {
     notFound();
   }
+
+  const owner = workspace.contributors.find((c) => c.role === 'owner');
+  // Fallback to workspace creator if no owner contributor found (data inconsistency)
+  const isOwnerPremium = owner
+    ? owner.user.plan === PlanType.PREMIUM
+    : workspace.user.plan === PlanType.PREMIUM;
+
+  // If owner is premium, everyone in workspace has access to premium features of that workspace
+  const isPremiumFeatureAvailable = isOwnerPremium;
 
   const connectedTelegram = await getConnectedTelegram();
 
@@ -93,9 +106,11 @@ export default async function WorkspaceSettingsPage({
           <TabsTrigger value="general">
             <Building2 className="w-4 h-4 mr-2" /> General
           </TabsTrigger>
+
           <TabsTrigger value="contributors">
             <Users className="w-4 h-4 mr-2" /> Team
           </TabsTrigger>
+
           <TabsTrigger value="security">Security Policy</TabsTrigger>
           <TabsTrigger value="telegram">Telegram Notifications</TabsTrigger>
         </TabsList>
@@ -106,7 +121,9 @@ export default async function WorkspaceSettingsPage({
           <WorkspaceGeneralSettings workspace={workspace as any} />
         </TabsContent>
 
-        <TabsContent value="contributors" className="mt-6">
+        <TabsContent value="contributors" className="mt-6 space-y-6">
+          <InviteWorkspaceMemberForm workspaceId={workspace.id} />
+
           <WorkspaceContributorsSettings
             workspaceId={workspace.id}
             currentUserId={session?.user?.id || ''}
@@ -126,7 +143,10 @@ export default async function WorkspaceSettingsPage({
         </TabsContent>
 
         <TabsContent value="telegram" className="mt-6">
-          <TelegramSettings initialConnectedAccount={connectedTelegram} />
+          <TelegramSettings
+            initialConnectedAccount={connectedTelegram}
+            isPremiumFeatureAvailable={isPremiumFeatureAvailable}
+          />
         </TabsContent>
       </Tabs>
     </div>

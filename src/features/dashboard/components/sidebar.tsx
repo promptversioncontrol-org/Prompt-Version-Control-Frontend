@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Building2,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { authClient } from '@/shared/lib/auth-client';
@@ -48,6 +49,11 @@ export function Sidebar({ className }: SidebarProps) {
       href: '/dashboard/settings',
       icon: Settings,
     },
+    {
+      title: 'Organizations',
+      href: '/dashboard/organizations',
+      icon: Building2,
+    },
   ];
 
   const handleSignOut = async () => {
@@ -79,7 +85,7 @@ export function Sidebar({ className }: SidebarProps) {
       <div className="p-6 flex items-center gap-3 overflow-hidden">
         <div className="flex-shrink-0">
           <Image
-            src="/icon/logo.svg"
+            src="/logo.svg"
             alt="Logo"
             width={32}
             height={32}
